@@ -3,15 +3,16 @@ from datetime import datetime
 from requests import get, HTTPError
 import json
 
-
 class BaseAPI(ABC):
 
     @abstractmethod
     def get_vacancies(self):
+        """Возвращает список вакансий на основе атрибута __response"""
         pass
 
     @abstractmethod
     def get_all_vacancies(self):
+        """Возвращает максимально возможный список вакансий из API"""
         pass
 
 
@@ -21,9 +22,13 @@ class HeadHunterAPI(BaseAPI):
     def __init__(self, keyword: str) -> None:
         self.__url = 'https://api.hh.ru/vacancies'
         self.keyword = keyword
-        self.__response = self.get_response()
+        self.__response = None
+        self.get_response()
 
-    def get_response(self, *args):
+    def get_response(self, *args) -> None:
+        """Метод делает запрос к API, в качестве аргумента может принимать номер страницы для передачи в API.
+                После обновляет атрибут __response полученными данными(dict)"""
+
         params = {'text': self.keyword,
                   'page': 0 if not args else args[0],
                   'per_page': 100,
@@ -35,7 +40,8 @@ class HeadHunterAPI(BaseAPI):
         self.__response = response
 
     def get_vacancies(self) -> list:
-        """Возвращает список вакансий на основе ответа API"""
+        """Возвращает список вакансий на основе атрибута __response"""
+
         vacancies = []
         for i in self.__response.json()['items']:
             try:
@@ -59,7 +65,9 @@ class HeadHunterAPI(BaseAPI):
                 continue
         return vacancies
 
-    def get_all_vacancies(self):
+    def get_all_vacancies(self) -> list:
+        """Возвращает максимально возможный список вакансий из API"""
+
         all_vacancies = []
         count = 0
         while count < 20:
@@ -81,11 +89,14 @@ class SuperJobAPI(BaseAPI):
         self.__token = 'v3.r.137597184.113108d119212cc819e7bd5e4351adf19edb8f31'\
                        '.afada7711de6cfa115505c80d6d45294df15712d'
         self.keyword = keyword
-        self.__response = self.get_response()
+        self.__response = None
+        self.get_response()
 
-    def get_response(self, *args):
+    def get_response(self, *args) -> None:
+        """Метод делает запрос к API, в качестве аргумента может принимать номер страницы для передачи в API.
+                После обновляет атрибут __response полученными данными(dict)"""
         params = {'app_key': self.__token,
-                  'page': 0 if not args else args[0],
+                  'page': 0 if not args else int(args[0]),
                   'count': 100,
                   'keyword': self.keyword
                   }
@@ -96,7 +107,7 @@ class SuperJobAPI(BaseAPI):
         self.__response = response
 
     def get_vacancies(self) -> list:
-        """Возвращает список вакансий на основе ответа API"""
+        """Возвращает список вакансий на основе атрибута __response"""
         vacancies = []
         for i in self.__response.json()['objects']:
             try:
@@ -116,7 +127,8 @@ class SuperJobAPI(BaseAPI):
                 continue
         return vacancies
 
-    def get_all_vacancies(self):
+    def get_all_vacancies(self) -> list:
+        """Возвращает максимально возможный список вакансий из API"""
         all_vacancies = []
         count = 0
         while count < 5:
@@ -127,13 +139,3 @@ class SuperJobAPI(BaseAPI):
                 break
             all_vacancies.extend(self.get_vacancies())
         return all_vacancies
-
-
-b = HeadHunterAPI("Python")
-# print(json.dumps(b.response.json(), indent=2, ensure_ascii=False))
-# print(json.dumps(b.get_all_vacancies(), indent=2, ensure_ascii=False))
-a = SuperJobAPI('Python')
-# print(json.dumps(a.response.json(), indent=2, ensure_ascii=False))
-# print(json.dumps(a.get_vacancies(), indent=2, ensure_ascii=False))
-print(len(b.get_all_vacancies()))
-print(len(a.get_all_vacancies()))

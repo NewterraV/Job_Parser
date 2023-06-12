@@ -1,5 +1,5 @@
 from src.classes.api import HeadHunterAPI, SuperJobAPI
-from src.classes.working_with_files import WorkingWithJSON
+from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel
 from src.Utils import get_user_vacancies, get_top_vacancies
 
 
@@ -66,7 +66,8 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
     }
     __function_all = {'1': 'Получить список вакансий с использованием фильтров',
                       '2': 'Получить топ 5 вакансий по зарплате',
-                      '3': 'Удалить вакансии'}
+                      '3': 'Записать все вакансии в файл Excel',
+                      '4': 'Удалить вакансии'}
 
     __data_filter = {'name': None,
                      'salary': None,
@@ -82,10 +83,12 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
 
     __output = {'1': 'Вывести все вакансии на экран',
                 '2': 'Вывести топ 5 вакансий по зарплате на экран',
+                '3': 'Записать в файл Excel'
                 }
 
     def __init__(self):
         self.__record = WorkingWithJSON()
+        self.__file_exel = WorkingWithExel()
 
     @property
     def record(self):
@@ -143,37 +146,52 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
 
     def get_function(self):
         """Функция для работы пользователя с вакансиями"""
-
-        print('\nВыберите функцию:')
-        self.dict_print(self.__function_all)
-        user_input = input()
-
-        # Получаем вакансии по параметрам
-        if user_input == '1':
-            vacancies = self.get_vacancies()
-
-            # предлагаем определить вывод
-            print('\nВыберите действие:')
-            self.dict_print(self.__output)
+        while True:
+            print('\nВыберите функцию:')
+            self.dict_print(self.__function_all)
             user_input = input()
-            if not self.check_exit(user_input):
-                if self.check_entry(user_input, self.__output):
-                    if user_input == '1':
-                        return vacancies
-                    return get_top_vacancies(vacancies)
-            else:
+            try:
+                if not self.check_exit(user_input):
+                    if self.check_entry(user_input, self.__function_all):
+
+                        # Получаем вакансии по параметрам
+                        if user_input == '1':
+                            vacancies = self.get_vacancies()
+
+                            # предлагаем определить вывод
+                            print('\nВыберите действие:')
+                            self.dict_print(self.__output)
+                            user_input = input()
+                            if not self.check_exit(user_input):
+                                if self.check_entry(user_input, self.__output):
+                                    if user_input == '1':
+                                        return vacancies
+                                    elif user_input == '3':
+                                        self.__file_exel.write_file(vacancies)
+                                        return True
+                                    return get_top_vacancies(vacancies)
+                            else:
+                                return False
+
+                        # Возвращаем топ 5 вакансий
+                        if user_input == '2':
+                            vacancies = self.__record.read_file(self.__data_filter)
+                            if vacancies:
+                                return get_top_vacancies(vacancies)
+                            return vacancies
+
+                        # Возвращаем все вакансии в exel
+                        if user_input == '3':
+                            self.__file_exel.write_file(self.__record.read_file(self.__data_filter))
+                            return True
+
+                        # Выполняем пользовательскую очистку
+                        if user_input == '4':
+                            return self.clear()
                 return False
-
-        # Возвращаем топ 5 вакансий
-        if user_input == '2':
-            vacancies = self.__record.read_file(self.__data_filter)
-            if vacancies:
-                return get_top_vacancies(vacancies)
-            return vacancies
-
-        # Выполняем пользовательскую очистку
-        if user_input == '3':
-            return self.clear()
+            except PermissionError:
+                print('Запись не удалась, закройте файл и повторите снова.')
+                continue
 
     def get_vacancies(self) -> [list, bool]:
         """Получает список вакансий по заданным параметрам из файла"""

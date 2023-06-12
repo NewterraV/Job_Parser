@@ -15,7 +15,7 @@ class Vacancy:
         self.__salary_to = data['salary']['to'] if data['salary']['to'] else 0
         self.__salary_curr = data['salary']['currency'].upper() if data['salary']['currency'] else 'Не указано'
         self.__area = data['area'].title()
-        self.__created = datetime.fromisoformat(data['created'])
+        self.__created = datetime.fromisoformat(data['created']).strftime("%d.%m.%y")
         self.__url = data['url']
         self.__requirement = data['requirement']
 
@@ -26,7 +26,7 @@ class Vacancy:
         return f'\nВакансия "{self.__name}" от компании "{self.__employer}".\nЗарплата от: {self.__salary_from} '\
                f'до: {self.__salary_to} в валюте: {self.__salary_curr}\nМесто расположения:'\
                f' {self.__area}, url: {self.__url}'\
-               f'\nКраткое описание:\n {self.__requirement}\nДата публикации: {self.__created.strftime("%d.%m.%y")}\n'\
+               f'\nКраткое описание:\n {self.__requirement}\nДата публикации: {self.__created}\n'\
                f'Вакансия получена от портала: {self.__aggregator}\n'
 
     def __lt__(self, other):
@@ -44,6 +44,26 @@ class Vacancy:
     def __ge__(self, other):
         salary_list = self.get_max_salary(self, other)
         return salary_list[0] >= salary_list[1]
+
+    @property
+    def aggregator(self):
+        return self.__aggregator
+
+    @property
+    def employer(self):
+        return self.__employer
+
+    @property
+    def created(self):
+        return self.__created
+
+    @property
+    def salary_curr(self):
+        return self.__salary_curr
+
+    @property
+    def url(self):
+        return self.__url
 
     @property
     def name(self):

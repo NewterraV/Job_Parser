@@ -251,9 +251,13 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
                     return
             return False
 
-    def get_vacancy_by_param(self):
+    def get_vacancy_by_param(self) -> bool:
         """Функция подбирает вакансии по параметрам и выводит их пользователю в выбранном формате"""
         vacancies = self.get_vacancies()
+
+        if type(vacancies) is bool:
+            return vacancies
+
         if len(vacancies) == 0:
             print('К сожалению, вакансии с данными параметрами отсутствуют.')
             return True

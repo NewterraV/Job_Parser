@@ -11,13 +11,6 @@ if __name__ == "__main__":
                 # Предлагаем выбрать действие с вакансиями
                 vacancy = user.get_function()
 
-                # Выводим результат выполнения
-                if type(vacancy) is list:
-                    if vacancy:
-                        user.print_vacancy(vacancy)
-                        continue
-                    print('К сожалению, вакансии с данными параметрами отсутствуют.')
-                    continue
                 if vacancy:
                     continue
                 break

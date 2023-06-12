@@ -83,7 +83,8 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
 
     __output = {'1': 'Вывести все вакансии на экран',
                 '2': 'Вывести топ 5 вакансий по зарплате на экран',
-                '3': 'Записать в файл Excel'
+                '3': 'Записать в файл Excel',
+                '4': 'Вернуться к функциям'
                 }
 
     def __init__(self):
@@ -156,22 +157,7 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
 
                         # Получаем вакансии по параметрам
                         if user_input == '1':
-                            vacancies = self.get_vacancies()
-
-                            # предлагаем определить вывод
-                            print('\nВыберите действие:')
-                            self.dict_print(self.__output)
-                            user_input = input()
-                            if not self.check_exit(user_input):
-                                if self.check_entry(user_input, self.__output):
-                                    if user_input == '1':
-                                        return vacancies
-                                    elif user_input == '3':
-                                        self.__file_exel.write_file(vacancies)
-                                        return True
-                                    return get_top_vacancies(vacancies)
-                            else:
-                                return False
+                            return self.get_vacancy_by_param()
 
                         # Возвращаем топ 5 вакансий
                         if user_input == '2':
@@ -207,7 +193,7 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
 
         while True:
             salary = input('\nВведите диапазон зарплаты от '
-                           'и до через тире (формат: 1000 - 1000)\n').split(' - ')
+                           'и до через тире (формат: 0-1000)\n').split('-')
 
             if len(salary) == 2 and salary[0].isdigit() and \
                     salary[1].isdigit():
@@ -219,7 +205,7 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
         """Возвращает словарь для функции фильтрации на основе ответов пользователя"""
         data_filter = {}
         while True:
-            print('\nВведите через запятую номера необходимых фильтров:')
+            print('\nВведите через запятую номера необходимых фильтров (формат: 1, 2, 4):')
             self.dict_print(self.__filters)
             user_input = input()
 
@@ -264,3 +250,25 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
                     print('Очистка завершена')
                     return
             return False
+
+    def get_vacancy_by_param(self):
+        """Функция подбирает вакансии по параметрам и выводит их пользователю в выбранном формате"""
+        vacancies = self.get_vacancies()
+        print(f'Найдено вакансий: {len(vacancies)}')
+
+        while True:
+            print('\nВыберите действие:')
+            self.dict_print(self.__output)
+            user_input = input()
+            if not self.check_exit(user_input):
+                if self.check_entry(user_input, self.__output):
+                    if user_input == '1':
+                        return vacancies
+                    elif user_input == '3':
+                        self.__file_exel.write_file(vacancies)
+                        continue
+                    elif user_input == '4':
+                        return True
+                    return get_top_vacancies(vacancies)
+            else:
+                return False

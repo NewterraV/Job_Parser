@@ -1,5 +1,4 @@
 import pytest
-
 from src.classes.working_with_files import WorkingWithJSON
 
 
@@ -74,7 +73,8 @@ def test_check_param(get_exmple):
     assert len(get_exmple.get_list_by_param(data, param[3])) == 2
     assert len(get_exmple.get_list_by_param(data, param[5])) == 2
 
-def test_WorkingWithJSON(get_exmple):
+
+def test_workingwithjson(get_exmple):
     data = [{
         "aggregator": "SuperJob",
         "name": "CMM-менеджер",

@@ -62,7 +62,8 @@ class HeadHunterAPI(BaseAPI):
                                   'area': i['area']['name'],
                                   'created': i['created_at'],
                                   'url': i['alternate_url'],
-                                  'requirement': i['snippet']['requirement']
+                                  'requirement': i['snippet']['requirement'] if i['snippet']['requirement']
+                                  else 'Описание отсутствует'
                                   })
             except KeyError:
                 continue
@@ -128,7 +129,8 @@ class SuperJobAPI(BaseAPI):
                                   'area': i['town']['title'],
                                   'created': datetime.utcfromtimestamp(i['date_published']).isoformat(),
                                   'url': i['link'],
-                                  'requirement': f"{i['candidat'][:170]}..." if i['candidat'] else None
+                                  'requirement': f"{i['candidat'][:170]}..." if i['candidat']
+                                  else 'Описание отсутствует'
                                   })
             except KeyError:
                 continue

@@ -60,12 +60,12 @@ class MixinFilter:
         if param['salary'] is None:
             status_list.append(True)
         else:
-            if param['salary'][0] <= vacancy.salary_from or param['salary'][0] <= vacancy.salary_to:
+            if int(param['salary'][0]) <= vacancy.salary_from or int(param['salary'][0]) <= vacancy.salary_to:
                 status_from = True
             else:
                 status_from = False
 
-            if param['salary'][1] >= vacancy.salary_from and param['salary'][1] >= vacancy.salary_to:
+            if int(param['salary'][1]) >= vacancy.salary_from and int(param['salary'][1]) >= vacancy.salary_to:
                 status_to = True
             else:
                 status_to = False
@@ -102,10 +102,11 @@ class WorkingWithJSON(WorkingWithFiles, MixinFilter):
         path_file = path.join(self.__path_data, filename)
         try:
             with open(path_file, 'r', encoding='utf8') as f:
-                vacancy = self.get_list_by_param(json.load(f), data)
-                return vacancy
+                vacancies = self.get_list_by_param(json.load(f), data)
+                vacancy_list = [Vacancy(i) for i in vacancies]
+                return vacancy_list
         except FileIsEmpty:
-            print(FileIsEmpty)
+            return []
 
         except NotImplementedError:
             print(f'Файл с именем {filename} не найден')
@@ -122,7 +123,7 @@ class WorkingWithJSON(WorkingWithFiles, MixinFilter):
         with open(path_file, 'w', encoding='utf8') as f:
             f.write('')
 
-    def del_file_by_param(self, data: dict, filename='vacancy.json'):
+    def clear_file_by_param(self, data: dict, filename='vacancy.json'):
         """Метод удаляет из файла вакансии с заданными параметрами"""
 
         path_file = path.join(self.__path_data, filename)

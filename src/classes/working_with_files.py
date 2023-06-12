@@ -27,13 +27,14 @@ class WorkingWithFiles(ABC):
 class MixinFilter:
     """Дополнительный функционал для WorkingWithFiles"""
 
-    def get_list_by_param(self, items: list, param: dict, flag=True) -> list:
+    def get_list_by_param(self, items: list, param: dict, reverse=False) -> list:
         """Метод принимает список вакансий, параметры для перебора. Аргумент flag меняет заполнение
          списка вакансиями подходящими под параметры на вакансии неподходящие """
+
         vacancy_list = []
         if not items:
             raise FileIsEmpty
-        if flag:
+        if not reverse:
             for i in items:
                 if self.check_param(i, param):
                     vacancy_list.append(i)
@@ -89,12 +90,15 @@ class MixinFilter:
 
 class WorkingWithJSON(WorkingWithFiles, MixinFilter):
     """Класс для работы с JSON файлами"""
+    __slots__ = ('__path_data_home', '__path_data')
 
     def __init__(self):
+
         self.__path_data_home = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
         self.__path_data = path.join(self.__path_data_home, 'data')
 
     def read_file(self, data: dict, filename='vacancy.json') -> list:
+
         path_file = path.join(self.__path_data, filename)
         try:
             with open(path_file, 'r', encoding='utf8') as f:
@@ -107,22 +111,25 @@ class WorkingWithJSON(WorkingWithFiles, MixinFilter):
             print(f'Файл с именем {filename} не найден')
 
     def write_file(self, data: list, filename='vacancy.json'):
+
         path_file = path.join(self.__path_data, filename)
         with open(path_file, 'w', encoding='utf8') as f:
             f.write(json.dumps(data, indent=2, ensure_ascii=False))
 
     def clear_file(self, filename='vacancy.json'):
+
         path_file = path.join(self.__path_data, filename)
         with open(path_file, 'w', encoding='utf8') as f:
             f.write('')
 
     def del_file_by_param(self, data: dict, filename='vacancy.json'):
         """Метод удаляет из файла вакансии с заданными параметрами"""
+
         path_file = path.join(self.__path_data, filename)
         with open(path_file, 'r', encoding='utf8') as f:
             vacancy = json.load(f)
 
-        vacancy_new = self.get_list_by_param(vacancy, data, False)
+        vacancy_new = self.get_list_by_param(vacancy, data, True)
 
         with open(path_file, 'w', encoding='utf8') as f:
             f.write(json.dumps(vacancy_new, indent=2, ensure_ascii=False))

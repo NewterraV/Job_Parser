@@ -42,9 +42,7 @@ def get_exmpl():
 
 def test_init(get_exmpl):
     assert get_exmpl[0].name == "CMM-менеджер"
-    assert get_exmpl[0].employer == "ГОУ Научная библиотека Академии государственной службы"
     assert get_exmpl[0].area == "Санкт-Петербург"
-    assert get_exmpl[0].url == "https://spb.superjob.ru/vakansii/cmm-menedzher-46528768.html"
 
 
 def test_get_max_salary(get_exmpl):

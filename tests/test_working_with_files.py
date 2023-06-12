@@ -1,10 +1,11 @@
 import pytest
-from src.classes.working_with_files import WorkingWithJSON
+from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel
+from src.classes.vacancy import Vacancy
 
 
 @pytest.fixture
 def get_exmple():
-    return WorkingWithJSON()
+    return [WorkingWithJSON(), WorkingWithExel()]
 
 
 def test_check_param(get_exmple):
@@ -66,12 +67,12 @@ def test_check_param(get_exmple):
               'keyword': None}
              ]
 
-    assert len(get_exmple.get_list_by_param(data, param[0])) == 1
-    assert len(get_exmple.get_list_by_param(data, param[1])) == 1
-    assert len(get_exmple.get_list_by_param(data, param[2])) == 0
-    assert len(get_exmple.get_list_by_param(data, param[2])) == 0
-    assert len(get_exmple.get_list_by_param(data, param[3])) == 2
-    assert len(get_exmple.get_list_by_param(data, param[5])) == 2
+    assert len(get_exmple[0].get_list_by_param(data, param[0])) == 1
+    assert len(get_exmple[0].get_list_by_param(data, param[1])) == 1
+    assert len(get_exmple[0].get_list_by_param(data, param[2])) == 0
+    assert len(get_exmple[0].get_list_by_param(data, param[2])) == 0
+    assert len(get_exmple[0].get_list_by_param(data, param[3])) == 2
+    assert len(get_exmple[0].get_list_by_param(data, param[5])) == 2
 
 
 def test_workingwithjson(get_exmple):
@@ -111,6 +112,11 @@ def test_workingwithjson(get_exmple):
              'salary': None,
              'area': None,
              'keyword': 'Python'}
+    vacancy_1 = Vacancy(data[0])
+    vacancy_2 = Vacancy(data[1])
 
-    get_exmple.write_file(data)
-    get_exmple.del_file_by_param(param)
+    get_exmple[0].write_file(data)
+    get_exmple[0].clear_file_by_param(param)
+
+    get_exmple[1].write_file([vacancy_1, vacancy_2])
+

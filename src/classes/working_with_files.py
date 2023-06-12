@@ -3,6 +3,7 @@ import json
 from src.classes.vacancy import Vacancy
 from src.classes.user_exception import FileIsEmpty
 from os import path
+from pandas import DataFrame
 
 
 class WorkingWithFiles(ABC):
@@ -88,6 +89,40 @@ class MixinFilter:
         return False
 
 
+class MixinFormat:
+
+    @staticmethod
+    def exel_format(data: list) -> dict:
+        """Функция подготавливает данные для записи в exel"""
+
+        vacancy = {
+            "Название вакансии": [],
+            "Работодатель": [],
+            "Зарплата от": [],
+            "Зарплата до": [],
+            "В валюте": [],
+            "Краткое описание": [],
+            "Ссылка на вакансию": [],
+            "Населенный пункт": [],
+            "Вакансия создана": [],
+            "Агрегатор": [],
+
+        }
+        for i in data:
+            vacancy['Агрегатор'].append(i.aggregator)
+            vacancy["Название вакансии"].append(i.name)
+            vacancy["Работодатель"].append(i.employer)
+            vacancy["Зарплата от"].append(i.salary_from)
+            vacancy["Зарплата до"].append(i.salary_to)
+            vacancy["В валюте"].append(i.salary_curr)
+            vacancy["Населенный пункт"].append(i.area)
+            vacancy["Вакансия создана"].append(i.created)
+            vacancy["Ссылка на вакансию"].append(i.url)
+            vacancy["Краткое описание"].append(i.requirement)
+
+        return vacancy
+
+
 class WorkingWithJSON(WorkingWithFiles, MixinFilter):
     """Класс для работы с JSON файлами"""
     __slots__ = ('__path_data_home', '__path_data')
@@ -134,3 +169,22 @@ class WorkingWithJSON(WorkingWithFiles, MixinFilter):
 
         with open(path_file, 'w', encoding='utf8') as f:
             f.write(json.dumps(vacancy_new, indent=2, ensure_ascii=False))
+
+
+class WorkingWithExel(WorkingWithFiles, MixinFilter, MixinFormat):
+
+    def __init__(self):
+
+        self.__path_data_home = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+        self.__path_data = path.join(self.__path_data_home, 'data')
+
+    def write_file(self, data: list, filename='vacancy.xlsx') -> None:
+        path_file = path.join(self.__path_data, filename)
+        dt = DataFrame(self.exel_format(data))
+        dt.to_excel(path_file)
+
+    def clear_file(self, filename: str) -> None:
+        pass
+
+    def read_file(self, data: dict, filename: str) -> list:
+        pass

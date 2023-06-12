@@ -254,6 +254,9 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
     def get_vacancy_by_param(self):
         """Функция подбирает вакансии по параметрам и выводит их пользователю в выбранном формате"""
         vacancies = self.get_vacancies()
+        if len(vacancies) == 0:
+            print('К сожалению, вакансии с данными параметрами отсутствуют.')
+            return True
         print(f'Найдено вакансий: {len(vacancies)}')
 
         while True:
@@ -263,12 +266,16 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
             if not self.check_exit(user_input):
                 if self.check_entry(user_input, self.__output):
                     if user_input == '1':
-                        return vacancies
+                        self.print_vacancy(vacancies)
+                        continue
                     elif user_input == '3':
                         self.__file_exel.write_file(vacancies)
+                        print('Запись выполнена')
                         continue
-                    elif user_input == '4':
-                        return True
-                    return get_top_vacancies(vacancies)
+                    elif user_input == '2':
+                        self.print_vacancy(get_top_vacancies(vacancies))
+                        continue
+                    return True
+
             else:
                 return False

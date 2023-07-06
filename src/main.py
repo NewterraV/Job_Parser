@@ -1,24 +1,24 @@
-from src.classes.work_with_user import WorkWithUser
+from src.classes.work_with_user import WorkWithUserBase, WorkWithUserKeyWord
 
 if __name__ == "__main__":
-    user = WorkWithUser()
     while True:
-
-        # проверяем статус получения вакансий от API
-        if user.get_vacancy_in_user_platform():
+        user = WorkWithUserBase()
+        user_start = user.starting_program()
+        if user_start == '1':
             while True:
+                function = user.search_type_selection()
+                if function == '1':
+                    user = WorkWithUserKeyWord()
+                    if user.keyword_search():
+                        continue
 
-                # Предлагаем выбрать действие с вакансиями
-                vacancy = user.get_function()
-
-                if vacancy:
-                    continue
+                elif function == '2':
+                    user = WorkWithUserEmployer()
+                    if user.search_by_employer():
+                        continue
                 break
-
-            # Выполняем очистку файла перед завершением
-            user.record.clear_file()
-
-            # Предлагаем пользователю повторить поиск
-            if user.get_repeat():
-                continue
+            break
+        elif user_start == '2':
+            user.create_config_database()
+            continue
         break

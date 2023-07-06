@@ -1,5 +1,6 @@
+from easygui import passwordbox
 from src.classes.api import HeadHunterAPI, SuperJobAPI
-from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel
+from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel, WorkingWithINI
 from src.utils import get_user_vacancies, get_top_vacancies
 
 
@@ -26,7 +27,7 @@ class MixinCheckInput:
                 flag = False
 
         if flag is False:
-            print('Неверный ввод, попробуйте еще раз.')
+            print('\033[31mНеверный ввод, попробуйте еще раз.\033[0m')
             return flag
         return flag
 
@@ -54,7 +55,62 @@ class MixinPrint:
             print(i)
 
 
-class WorkWithUser(MixinCheckInput, MixinPrint):
+class WorkWithUserBase(MixinCheckInput, MixinPrint):
+    __type_selection = {
+        '1': 'По ключевому слову',
+        '2': 'По работодателю '
+    }
+
+    __main_function = {
+        '1': 'Поиск вакансий',
+        '2': 'Сгенерировать DataBase Config'
+    }
+
+    def search_type_selection(self) -> [int, bool]:
+        """Функция запрашивает у пользователя тип поиска вакансий"""
+
+        while True:
+            self.dict_print(self.__type_selection)
+            user_input = input()
+            if self.check_exit(user_input):
+                return False
+            if self.check_entry(user_input, self.__type_selection):
+                return user_input
+            continue
+
+    def starting_program(self):
+        while True:
+            self.dict_print(self.__main_function)
+            user_input = input()
+            if self.check_exit(user_input):
+                return False
+            if self.check_entry(user_input, self.__main_function):
+                return user_input
+            continue
+
+    @staticmethod
+    def create_config_database() -> None:
+        """Функция создает конфиг для работы с базой данных"""
+        record = WorkingWithINI()
+        host = input('Введите значение host (пустое поле - значение по умолчанию)\n')
+        user = input('Введите имя пользователя (пустое поле - значение по умолчанию)\n')
+        while True:
+            print('Введите пароль в отдельно появившемся окне')
+            password = passwordbox('Пароль для доступа к базе данных:')
+            if password:
+                break
+            print('\033[31mError: пароль не может быть пустым\033[0m')
+        port = input('Введите номер порта (пустое поле - значение по умолчанию)\n')
+        param = f'[postgresql]\n' \
+                f'host={host if host else "localhost"}\n' \
+                f'user={user if user else "postgres"}\n' \
+                f'password={password}\n' \
+                f'port={port if port else 5432}\n'
+        record.write_file(param)
+        print('\033[32mDataBase Config успешно сгенерирован\033[0m')
+
+
+class WorkWithUserKeyWord(WorkWithUserBase):
     """Класс с набором методов для работы с пользователем"""
 
     __platform = {'1': ['HeadHunter', HeadHunterAPI],
@@ -87,31 +143,35 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
                 '4': 'Вернуться к функциям'
                 }
 
-    __main_function = {
-        '1': 'По ключевому слову',
-        '2': 'По работодателю '
-    }
-
     def __init__(self):
         self.__record = WorkingWithJSON()
         self.__file_exel = WorkingWithExel()
+
+    def keyword_search(self) -> bool:
+
+        # проверяем статус получения вакансий от API
+        if self.get_vacancy_in_user_platform():
+            while True:
+
+                # Предлагаем выбрать действие с вакансиями
+                vacancy = self.get_function()
+                print(vacancy)
+                if vacancy:
+                    continue
+                break
+
+            # Выполняем очистку файла перед завершением
+            self.record.clear_file()
+
+            # Предлагаем пользователю повторить поиск
+            if self.get_repeat():
+                return True
+        return False
 
     @property
     def record(self):
         """Возвращает self.__record"""
         return self.__record
-
-    def search_type_selection(self) -> [int, bool]:
-        """Функция запрашивает у пользователя тип поиска вакансий"""
-
-        while True:
-            self.dict_print(self.__main_function)
-            user_input = input()
-            if self.check_exit(user_input):
-                return False
-            if self.check_entry(user_input, self.__main_function):
-                return user_input
-            continue
 
     def get_vacancy_in_user_platform(self) -> bool:
         """Функция предлагает пользователю выбрать платформу для получения вакансий,
@@ -192,6 +252,7 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
                         # Выполняем пользовательскую очистку
                         if user_input == '4':
                             return self.clear()
+                    continue
                 return False
             except PermissionError:
                 print('Запись не удалась, закройте файл и повторите снова.')

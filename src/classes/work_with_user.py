@@ -1,13 +1,13 @@
 from src.classes.api import HeadHunterAPI, SuperJobAPI
 from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel
-from src.Utils import get_user_vacancies, get_top_vacancies
+from src.utils import get_user_vacancies, get_top_vacancies
 
 
 class MixinCheckInput:
     """Класс с методами проверки ввода"""
 
     @staticmethod
-    def check_exit(value: str) -> bool:
+    def check_exit(value: [str, int]) -> bool:
         """Проверяет ввод пользователя на флаг выхода из программы"""
         if str(value) == '0':
             return True
@@ -87,6 +87,11 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
                 '4': 'Вернуться к функциям'
                 }
 
+    __main_function = {
+        '1': 'По ключевому слову',
+        '2': 'По работодателю '
+    }
+
     def __init__(self):
         self.__record = WorkingWithJSON()
         self.__file_exel = WorkingWithExel()
@@ -95,6 +100,18 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
     def record(self):
         """Возвращает self.__record"""
         return self.__record
+
+    def search_type_selection(self) -> [int, bool]:
+        """Функция запрашивает у пользователя тип поиска вакансий"""
+
+        while True:
+            self.dict_print(self.__main_function)
+            user_input = input()
+            if self.check_exit(user_input):
+                return False
+            if self.check_entry(user_input, self.__main_function):
+                return user_input
+            continue
 
     def get_vacancy_in_user_platform(self) -> bool:
         """Функция предлагает пользователю выбрать платформу для получения вакансий,
@@ -163,6 +180,7 @@ class WorkWithUser(MixinCheckInput, MixinPrint):
                         if user_input == '2':
                             vacancies = self.__record.read_file(self.__data_filter)
                             if vacancies:
+                                self.print_vacancy(get_top_vacancies(vacancies))
                                 return get_top_vacancies(vacancies)
                             return vacancies
 

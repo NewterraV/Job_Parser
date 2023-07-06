@@ -19,11 +19,12 @@ class BaseAPI(ABC):
 class HeadHunterAPI(BaseAPI):
     """Класс для работы с API HeadHunter"""
 
-    __slots__ = ('__url', 'keyword', 'employer_id', '__response')
+    __slots__ = ('__url_vacancies', 'keyword', 'employer_id', '__response')
 
     def __init__(self, keyword=None, employer_id=None) -> None:
 
-        self.__url = 'https://api.hh.ru/vacancies'
+        self.__url_vacancies = 'https://api.hh.ru/vacancies'
+        self.__url_employers = 'https://api.hh.ru/employers/'
         self.keyword = keyword
         self.employer_id = employer_id
         self.__response = None
@@ -42,11 +43,21 @@ class HeadHunterAPI(BaseAPI):
             params = {'employer_id': self.employer_id,
                       'page': 0 if not args else args[0],
                       'per_page': 100}
-        response = get(self.__url, params=params)
+        response = get(self.__url_vacancies, params=params)
 
         if not response:
             raise HTTPError(f'Ошибка сервера. Код ответа: {response.status_code}')
         self.__response = response
+
+    def get_employers(self, employers: list) -> list[dict]:
+        """Метод получает информацию о работодателе"""
+        data_employers = []
+        for employer in employers:
+            response = get(f'{self.__url_employers}{employer}').json()
+            data_employers.append({'name': response['name'],
+                                   'url': response['site_url'],
+                                   'area': response['area']['name']})
+            return data_employers
 
     def get_vacancies(self) -> list:
         """Возвращает список вакансий на основе атрибута __response"""
@@ -95,11 +106,12 @@ class SuperJobAPI(BaseAPI):
 
     __slots__ = ('__url', 'keyword', '__response', '__token')
 
-    def __init__(self, keyword: str):
+    def __init__(self, keyword=None, employer_id=None):
 
         self.__url = 'https://api.superjob.ru/2.0/vacancies/'
         self.__token = 'v3.r.137597184.113108d119212cc819e7bd5e4351adf19edb8f31' \
                        '.afada7711de6cfa115505c80d6d45294df15712d'
+        self.employer_id = employer_id
         self.keyword = keyword
         self.__response = None
         self.get_response()

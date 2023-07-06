@@ -7,24 +7,25 @@ class BaseAPI(ABC):
 
     @abstractmethod
     def get_vacancies(self):
-        """Возвращает список вакансий на основе атрибута __response"""
+        """Возвращает список вакансий на основе атрибута __response по ключевому слову"""
         pass
 
     @abstractmethod
     def get_all_vacancies(self):
-        """Возвращает максимально возможный список вакансий из API"""
+        """Возвращает максимально возможный список вакансий из API по ключевому слову"""
         pass
 
 
 class HeadHunterAPI(BaseAPI):
     """Класс для работы с API HeadHunter"""
 
-    __slots__ = ('__url', 'keyword', '__response')
+    __slots__ = ('__url', 'keyword', 'employer_id', '__response')
 
-    def __init__(self, keyword: str) -> None:
+    def __init__(self, keyword=None, employer_id=None) -> None:
 
         self.__url = 'https://api.hh.ru/vacancies'
         self.keyword = keyword
+        self.employer_id = employer_id
         self.__response = None
         self.get_response()
 
@@ -32,10 +33,15 @@ class HeadHunterAPI(BaseAPI):
         """Метод делает запрос к API, в качестве аргумента может принимать номер страницы для передачи в API.
                 После обновляет атрибут __response полученными данными(dict)"""
 
-        params = {'text': self.keyword,
-                  'page': 0 if not args else args[0],
-                  'per_page': 100,
-                  'search_field': 'name'}
+        if self.employer_id is None:
+            params = {'text': self.keyword,
+                      'page': 0 if not args else args[0],
+                      'per_page': 100,
+                      'search_field': 'name'}
+        else:
+            params = {'employer_id': self.employer_id,
+                      'page': 0 if not args else args[0],
+                      'per_page': 100}
         response = get(self.__url, params=params)
 
         if not response:

@@ -55,8 +55,10 @@ class HeadHunterAPI(BaseAPI):
         for employer in employers:
             response = get(f'{self.__url_employers}{employer}').json()
             data_employers.append({'name': response['name'],
+                                   'id': employer,
                                    'url': response['site_url'],
                                    'area': response['area']['name']})
+        print(data_employers)
         return data_employers
 
     def get_vacancies(self) -> list:
@@ -75,6 +77,7 @@ class HeadHunterAPI(BaseAPI):
                 vacancies.append({'aggregator': 'HeadHunter',
                                   'name': i["name"],
                                   'employer': i['employer']['name'],
+                                  'employer_id': i['employer']['id'],
                                   "salary": salary,
                                   'area': i['area']['name'],
                                   'created': i['created_at'],

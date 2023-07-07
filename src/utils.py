@@ -1,7 +1,8 @@
 from requests import HTTPError, ConnectionError
+from src.classes.api import HeadHunterAPI
 
 
-def get_user_vacancies(keyword: str, user_platform: list, all_result=False) -> [list, False]:
+def get_user_vacancies(user_platform, keyword=None, employer_id=None, all_result=False) -> [list, False]:
     """Функция на основе списка платформ выдает список словарей вакансий. По флагу all_result определяет
     количество возвращаемых результатов. В случае ошибок со стороны сервера вернет False"""
 
@@ -9,7 +10,7 @@ def get_user_vacancies(keyword: str, user_platform: list, all_result=False) -> [
     while True:
         try:
             for i in user_platform:
-                vacancies = i(keyword)
+                vacancies = i(keyword=keyword, employer_id=employer_id)
                 if all_result:
                     all_vacancy += vacancies.get_all_vacancies()
                     continue

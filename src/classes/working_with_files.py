@@ -195,10 +195,10 @@ class WorkingWithINI(WorkingWithFiles):
 
     def __init__(self):
         self.__path_data_home = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-        self.__path_data = path.join(self.__path_data_home, 'data')
+        self.__path_src = path.join(self.__path_data_home, 'src')
 
     def write_file(self, data: Any, filename='database.ini') -> None:
-        path_file = path.join(self.__path_data, filename)
+        path_file = path.join(self.__path_src, filename)
         with open(path_file, 'w', encoding='utf8') as f:
             f.write(data)
 

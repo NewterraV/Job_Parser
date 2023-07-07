@@ -1,4 +1,5 @@
 import psycopg2
+from tqdm import tqdm
 
 from src.config import config
 
@@ -51,10 +52,10 @@ class DBmanager:
                     title VARCHAR(200) NOT NULL,
                     salary_from INTEGER,
                     salary_to INTEGER,
-                    salary_currency VARCHAR(5),
+                    currency VARCHAR(5),
                     area VARCHAR(70),
                     url TEXT,
-                    requirement VARCHAR(180)
+                    requirement TEXT
                     )
             """)
 
@@ -70,11 +71,38 @@ class DBmanager:
 
         # Добавление данных в таблицу employer
         with conn.cursor() as cur:
-            for item in data:
+            for item in tqdm(data, colour='green'):
                 cur.execute("""
                     INSERT INTO employer (employer_id, title, url, area)
                     VALUES (%s, %s, %s, %s)
                 """, (item['id'], item['name'], item['url'], item['area']))
+
+        # Закрытие соединения
+        conn.commit()
+        conn.close()
+
+    def save_data_to_vacancies(self, data):
+        """Метод добавляет данные в таблицу vacancies"""
+
+        # Открытие соединения с базой данных
+        conn = psycopg2.connect(dbname='vacancies', **self.params)
+
+        # Добавление данных в таблицу vacancies
+        with conn.cursor() as cur:
+            for item in tqdm(data, colour='green'):
+                cur.execute("""
+                            INSERT INTO vacancies 
+                            (employer_id, title, salary_from, salary_to, currency, area, url, requirement)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        """, (item['employer_id'],
+                              item['name'],
+                              item['salary']['from'],
+                              item['salary']['to'],
+                              item['salary']['currency'],
+                              item['area'],
+                              item['url'],
+                              item["requirement"]
+                              ))
 
         # Закрытие соединения
         conn.commit()

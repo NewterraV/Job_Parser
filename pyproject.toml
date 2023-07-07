@@ -10,6 +10,9 @@ python = "^3.11"
 requests = "^2.31.0"
 pandas = "^2.0.2"
 openpyxl = "^3.1.2"
+inline-input = "^1.1"
+easygui = "^0.98.3"
+psycopg2 = "^2.9.6"
 
 
 [tool.poetry.group.dev.dependencies]

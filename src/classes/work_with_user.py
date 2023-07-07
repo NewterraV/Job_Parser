@@ -1,7 +1,11 @@
 from easygui import passwordbox
+
 from src.classes.api import HeadHunterAPI, SuperJobAPI
 from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel, WorkingWithINI
+from src.classes.DBmanger import DBmanager
+
 from src.utils import get_user_vacancies, get_top_vacancies
+from src.classes.user_exception import CheckExit
 
 
 class MixinCheckInput:
@@ -11,7 +15,7 @@ class MixinCheckInput:
     def check_exit(value: [str, int]) -> bool:
         """Проверяет ввод пользователя на флаг выхода из программы"""
         if str(value) == '0':
-            return True
+            raise CheckExit
         return False
 
     @staticmethod
@@ -66,14 +70,22 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         '2': 'Сгенерировать DataBase Config'
     }
 
+    __volume = {
+        '1': '100 вакансий на одну платформу.',
+        '2': 'Максимально возможное количество.'
+    }
+
+    @property
+    def volume(self):
+        return self.__volume
+
     def search_type_selection(self) -> [int, bool]:
         """Функция запрашивает у пользователя тип поиска вакансий"""
 
         while True:
             self.dict_print(self.__type_selection)
             user_input = input()
-            if self.check_exit(user_input):
-                return False
+            self.check_exit(user_input)
             if self.check_entry(user_input, self.__type_selection):
                 return user_input
             continue
@@ -82,15 +94,24 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         while True:
             self.dict_print(self.__main_function)
             user_input = input()
-            if self.check_exit(user_input):
-                return False
+            self.check_exit(user_input)
             if self.check_entry(user_input, self.__main_function):
                 return user_input
             continue
 
     @staticmethod
+    def get_repeat():
+        """Запрашивает повтор поиска вакансий"""
+        print('\nВыполнить новый поиск?\n1 - Да\n0 - завершить программу\n')
+        user_input = input()
+        if user_input == '0':
+            return False
+        return True
+
+    @staticmethod
     def create_config_database() -> None:
         """Функция создает конфиг для работы с базой данных"""
+
         record = WorkingWithINI()
         host = input('Введите значение host (пустое поле - значение по умолчанию)\n')
         user = input('Введите имя пользователя (пустое поле - значение по умолчанию)\n')
@@ -109,6 +130,15 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         record.write_file(param)
         print('\033[32mDataBase Config успешно сгенерирован\033[0m')
 
+    def get_volume(self) -> [bool, str]:
+        print('\nВыберите количество результатов:')
+        self.dict_print(self.__volume)
+        user_volume = input()
+        self.check_exit(user_volume)
+        if self.check_entry(user_volume, self.__volume):
+            return user_volume
+        return True
+
 
 class WorkWithUserKeyWord(WorkWithUserBase):
     """Класс с набором методов для работы с пользователем"""
@@ -116,10 +146,7 @@ class WorkWithUserKeyWord(WorkWithUserBase):
     __platform = {'1': ['HeadHunter', HeadHunterAPI],
                   '2': ['SuperJob', SuperJobAPI]
                   }
-    __volume = {
-        '1': '100 вакансий на одну платформу.',
-        '2': 'Максимально возможное количество.'
-    }
+
     __function_all = {'1': 'Получить список вакансий с использованием фильтров',
                       '2': 'Получить топ 5 вакансий по зарплате',
                       '3': 'Записать все вакансии в файл Excel',
@@ -147,7 +174,8 @@ class WorkWithUserKeyWord(WorkWithUserBase):
         self.__record = WorkingWithJSON()
         self.__file_exel = WorkingWithExel()
 
-    def keyword_search(self) -> bool:
+    def keyword_search(self) -> None:
+        """Основная логика работы с вакансиями по ключевому слову"""
 
         # проверяем статус получения вакансий от API
         if self.get_vacancy_in_user_platform():
@@ -155,7 +183,6 @@ class WorkWithUserKeyWord(WorkWithUserBase):
 
                 # Предлагаем выбрать действие с вакансиями
                 vacancy = self.get_function()
-                print(vacancy)
                 if vacancy:
                     continue
                 break
@@ -163,64 +190,51 @@ class WorkWithUserKeyWord(WorkWithUserBase):
             # Выполняем очистку файла перед завершением
             self.record.clear_file()
 
-            # Предлагаем пользователю повторить поиск
-            if self.get_repeat():
-                return True
-        return False
-
     @property
     def record(self):
         """Возвращает self.__record"""
         return self.__record
 
-    def get_vacancy_in_user_platform(self) -> bool:
+    def get_vacancy_in_user_platform(self) -> [bool, None]:
         """Функция предлагает пользователю выбрать платформу для получения вакансий,
         после получает вакансии и записывает их в JSON файл, при успешной работе возвращает True"""
 
         name_vacancy = input('\nВведите ключевое слово для поиска вакансий\n'
                              f'0 - Завершение программы:\n')
 
-        if not self.check_exit(name_vacancy):
+        self.check_exit(name_vacancy)
 
-            while True:
-                print('\nВведите через запятую номера платформ для загрузки вакансий (1, 2)')
-                self.dict_print(self.__platform, 0)
-                user_input = input()
+        while True:
+            print('\nВведите через запятую номера платформ для загрузки вакансий (1, 2)')
+            self.dict_print(self.__platform, 0)
+            user_input = input()
 
-                if self.check_exit(user_input):
-                    break
+            self.check_exit(user_input)
+            if not self.check_entry(user_input.split(', '), self.__platform):
+                continue
+            else:
+                # создаем список платформ выбранных пользователем
+                user_platform = [self.__platform[i][1] for i in user_input.split(', ')]
 
-                if not self.check_entry(user_input.split(', '), self.__platform):
-                    continue
-                else:
-                    # создаем список платформ выбранных пользователем
-                    user_platform = [self.__platform[i][1] for i in user_input.split(', ')]
+                while True:
+                    user_volume = self.get_volume()
+                    if user_volume:
+                        break
+                    return False
 
+                # выполняем загрузку списка вакансий
+                self.check_exit(user_volume)
+                if self.check_entry(user_volume, self.volume):
                     while True:
-                        print('\nВыберите количество результатов:')
-                        self.dict_print(self.__volume)
-                        user_volume = input()
-                        if not self.check_exit(user_volume):
+                        all_vacancy = get_user_vacancies(user_platform, keyword=name_vacancy,
+                                                             all_result=True if user_volume != '1' else False)
+                        break
 
-                            if self.check_entry(user_volume, self.__volume):
-                                break
-                            continue
-                        return False
-
-                    # выполняем загрузку списка вакансий
-                    if not self.check_exit(user_volume):
-                        print('Загружаю вакансии, ожидайте.')
-                        while True:
-                            all_vacancy = get_user_vacancies(name_vacancy, user_platform,
-                                                             True if user_volume != '1' else False)
-                            break
-
-                        if all_vacancy:
-                            print(f'Успех, количество полученных вакансий: {len(all_vacancy)}')
-                            self.__record.write_file(all_vacancy)
-                            return True
-                    break
-        return False
+                    if all_vacancy:
+                        print(f'\033[32mУспех, количество полученных вакансий: {len(all_vacancy)}\033[m')
+                        self.__record.write_file(all_vacancy)
+                        return True
+                    continue
 
     def get_function(self):
         """Функция для работы пользователя с вакансиями"""
@@ -229,31 +243,30 @@ class WorkWithUserKeyWord(WorkWithUserBase):
             self.dict_print(self.__function_all)
             user_input = input()
             try:
-                if not self.check_exit(user_input):
-                    if self.check_entry(user_input, self.__function_all):
+                self.check_exit(user_input)
+                if self.check_entry(user_input, self.__function_all):
 
-                        # Получаем вакансии по параметрам
-                        if user_input == '1':
-                            return self.get_vacancy_by_param()
+                    # Получаем вакансии по параметрам
+                    if user_input == '1':
+                        return self.get_vacancy_by_param()
 
-                        # Возвращаем топ 5 вакансий
-                        if user_input == '2':
-                            vacancies = self.__record.read_file(self.__data_filter)
-                            if vacancies:
-                                self.print_vacancy(get_top_vacancies(vacancies))
-                                return get_top_vacancies(vacancies)
-                            return vacancies
+                    # Возвращаем топ 5 вакансий
+                    if user_input == '2':
+                        vacancies = self.__record.read_file(self.__data_filter)
+                        if vacancies:
+                            self.print_vacancy(get_top_vacancies(vacancies))
+                            return get_top_vacancies(vacancies)
+                        return vacancies
 
-                        # Возвращаем все вакансии в exel
-                        if user_input == '3':
-                            self.__file_exel.write_file(self.__record.read_file(self.__data_filter))
-                            return True
+                    # Возвращаем все вакансии в exel
+                    if user_input == '3':
+                        self.__file_exel.write_file(self.__record.read_file(self.__data_filter))
+                        return True
 
-                        # Выполняем пользовательскую очистку
-                        if user_input == '4':
-                            return self.clear()
-                    continue
-                return False
+                    # Выполняем пользовательскую очистку
+                    if user_input == '4':
+                        return self.clear()
+                continue
             except PermissionError:
                 print('Запись не удалась, закройте файл и повторите снова.')
                 continue
@@ -288,8 +301,7 @@ class WorkWithUserKeyWord(WorkWithUserBase):
             self.dict_print(self.__filters)
             user_input = input()
 
-            if self.check_exit(user_input):
-                return False
+            self.check_exit(user_input)
             user_function = user_input.split(', ')
             if not self.check_entry(user_function, self.__filters):
                 continue
@@ -306,29 +318,22 @@ class WorkWithUserKeyWord(WorkWithUserBase):
             if '4' in user_function else None
         return data_filter
 
-    def get_repeat(self):
-        """Запрашивает повтор поиска вакансий"""
-        print('\nВыполнить новый поиск?\n1 - Да\n0 - завершить программу\n')
-        user_input = input()
-        return not self.check_exit(user_input)
-
     def clear(self):
         """Выполняет пользовательскую очистку"""
         while True:
             user_filter = input('\nВыберите:\n1 - удалить с фильтрацией\n2 - полная очистка\n'
                                 '0 - завершение программы\n')
-            if not self.check_exit(user_filter):
-                if user_filter == '1':
-                    data_filter = self.get_filter()
-                    self.__record.clear_file_by_param(data_filter)
-                    print('Очистка по выбранным фильтрам завершена')
-                    return True
+            self.check_exit(user_filter)
+            if user_filter == '1':
+                data_filter = self.get_filter()
+                self.__record.clear_file_by_param(data_filter)
+                print('Очистка по выбранным фильтрам завершена')
+                return True
 
-                if user_filter == '2':
-                    self.__record.clear_file()
-                    print('Очистка завершена')
-                    return
-            return False
+            if user_filter == '2':
+                self.__record.clear_file()
+                print('Очистка завершена')
+                return
 
     def get_vacancy_by_param(self) -> bool:
         """Функция подбирает вакансии по параметрам и выводит их пользователю в выбранном формате"""
@@ -346,19 +351,65 @@ class WorkWithUserKeyWord(WorkWithUserBase):
             print('\nВыберите действие:')
             self.dict_print(self.__output)
             user_input = input()
-            if not self.check_exit(user_input):
-                if self.check_entry(user_input, self.__output):
-                    if user_input == '1':
-                        self.print_vacancy(vacancies)
-                        continue
-                    elif user_input == '3':
-                        self.__file_exel.write_file(vacancies)
-                        print('Запись выполнена')
-                        continue
-                    elif user_input == '2':
-                        self.print_vacancy(get_top_vacancies(vacancies))
-                        continue
-                    return True
-
+            self.check_exit(user_input)
+            if self.check_entry(user_input, self.__output):
+                if user_input == '1':
+                    self.print_vacancy(vacancies)
+                    continue
+                elif user_input == '3':
+                    self.__file_exel.write_file(vacancies)
+                    print('Запись выполнена')
+                    continue
+                elif user_input == '2':
+                    self.print_vacancy(get_top_vacancies(vacancies))
+                    continue
+                return True
             else:
                 return False
+
+
+class WorkWithUserEmployer(WorkWithUserBase):
+
+    def __init__(self):
+        self.__record = WorkingWithJSON()
+        self.__file_exel = WorkingWithExel()
+        self.__db_manager = DBmanager()
+        self.__api = HeadHunterAPI()
+
+    def search_by_employer(self):
+        """Основная логика работы с вакансиями по работодателю"""
+
+        while True:
+            # создание базы данных
+            self.__db_manager.create_database()
+            # Получение списка работодателей
+            user_employers = self.get_user_employers()
+
+            # Запрос по API
+            all_employers = self.__api.get_employers(user_employers)
+            # Сохранение работодателей в БД
+            self.__db_manager.save_data_to_employer(all_employers)
+            # Получение вакансий по работодателю
+            all_vacancy = get_user_vacancies([HeadHunterAPI], employer_id=user_employers,
+                                             all_result=True)
+            # Сохранение вакансий в БД
+
+            # Предлагаем выбрать действие с вакансиями
+            # vacancy = self.get_function()
+            # if vacancy:
+            #     continue
+            break
+
+        # Выполняем очистку файла перед завершением
+        self.__record.clear_file()
+        return True
+
+    def get_user_employers(self) -> list:
+        """Метод запрашивает у пользователя список id работодателей HH"""
+
+        user_input = input('Введите через запятую id работодателей для запроса (формат: 1235795, 79987456, 7854458)\n'
+                           'оставьте строку пустой для загрузки по умолчанию\n')
+        self.check_exit(user_input)
+        if user_input:
+            return user_input.split(', ')
+        return [1740, 78638, 3529, 4872, 1060266, 115, 2180, 26624, 35065]

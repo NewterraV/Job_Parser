@@ -57,7 +57,7 @@ class HeadHunterAPI(BaseAPI):
             data_employers.append({'name': response['name'],
                                    'url': response['site_url'],
                                    'area': response['area']['name']})
-            return data_employers
+        return data_employers
 
     def get_vacancies(self) -> list:
         """Возвращает список вакансий на основе атрибута __response"""

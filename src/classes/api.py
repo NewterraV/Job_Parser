@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from requests import get, HTTPError
+from tqdm import tqdm
 
 
 class BaseAPI(ABC):
@@ -52,20 +53,20 @@ class HeadHunterAPI(BaseAPI):
     def get_employers(self, employers: list) -> list[dict]:
         """Метод получает информацию о работодателе"""
         data_employers = []
-        for employer in employers:
+        print('\033[32mЗагружаю данные работодателей\033[0m')
+        for employer in tqdm(employers, colour='green'):
             response = get(f'{self.__url_employers}{employer}').json()
             data_employers.append({'name': response['name'],
                                    'id': employer,
                                    'url': response['site_url'],
                                    'area': response['area']['name']})
-        print(data_employers)
         return data_employers
 
     def get_vacancies(self) -> list:
         """Возвращает список вакансий на основе атрибута __response"""
 
         vacancies = []
-        for i in self.__response.json()['items']:
+        for i in tqdm(self.__response.json()['items'], colour='green'):
             try:
                 salary = {'from': i['salary']['from'],
                           'to': i['salary']['to'],
@@ -94,6 +95,7 @@ class HeadHunterAPI(BaseAPI):
 
         all_vacancies = []
         count = 0
+        print('\033[32mПолучаю данные по вакансиям HH.ru\033[0m')
         while count < 20:
             self.get_response(count)
             # фильтрация бесполезных обращений к API для уменьшения времени выполнения
@@ -117,7 +119,7 @@ class SuperJobAPI(BaseAPI):
         self.employer_id = employer_id
         self.keyword = keyword
         self.__response = None
-        self.get_response()
+        self.get_response()\
 
     def get_response(self, *args) -> None:
         """Метод делает запрос к API, в качестве аргумента может принимать номер страницы для передачи в API.
@@ -138,7 +140,7 @@ class SuperJobAPI(BaseAPI):
         """Возвращает список вакансий на основе атрибута __response"""
 
         vacancies = []
-        for i in self.__response.json()['objects']:
+        for i in tqdm(self.__response.json()['objects'], colour='green'):
             try:
                 vacancies.append({'aggregator': 'SuperJob',
                                   'name': i["profession"],
@@ -159,6 +161,7 @@ class SuperJobAPI(BaseAPI):
 
     def get_all_vacancies(self) -> list:
         """Возвращает максимально возможный список вакансий из API"""
+        print('\033[32mПолучаю данные по вакансиям SuperJob\033[0m')
 
         all_vacancies = []
         count = 0

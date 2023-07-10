@@ -96,7 +96,7 @@ class MixinFormat:
     def exel_format(data: list) -> dict:
         """Функция подготавливает данные для записи в exel"""
 
-        vacancy = {
+        vacancies = {
             "Название вакансии": [],
             "Работодатель": [],
             "Зарплата от": [],
@@ -106,22 +106,21 @@ class MixinFormat:
             "Ссылка на вакансию": [],
             "Населенный пункт": [],
             "Вакансия создана": [],
-            "Агрегатор": [],
 
         }
         for i in data:
-            vacancy['Агрегатор'].append(i.aggregator)
-            vacancy["Название вакансии"].append(i.name)
-            vacancy["Работодатель"].append(i.employer)
-            vacancy["Зарплата от"].append(i.salary_from)
-            vacancy["Зарплата до"].append(i.salary_to)
-            vacancy["В валюте"].append(i.salary_curr)
-            vacancy["Населенный пункт"].append(i.area)
-            vacancy["Вакансия создана"].append(i.created)
-            vacancy["Ссылка на вакансию"].append(i.url)
-            vacancy["Краткое описание"].append(i.requirement)
+            vacancy = Vacancy(i)
+            vacancies["Название вакансии"].append(vacancy.name)
+            vacancies["Работодатель"].append(vacancy.employer)
+            vacancies["Зарплата от"].append(vacancy.salary_from)
+            vacancies["Зарплата до"].append(vacancy.salary_to)
+            vacancies["В валюте"].append(vacancy.salary_curr)
+            vacancies["Населенный пункт"].append(vacancy.area)
+            vacancies["Вакансия создана"].append(vacancy.created)
+            vacancies["Ссылка на вакансию"].append(vacancy.url)
+            vacancies["Краткое описание"].append(vacancy.requirement)
 
-        return vacancy
+        return vacancies
 
 
 class WorkingWithJSON(WorkingWithFiles, MixinFilter):
@@ -178,8 +177,8 @@ class WorkingWithExel(WorkingWithFiles, MixinFilter, MixinFormat):
         self.__path_data_home = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
         self.__path_data = path.join(self.__path_data_home, 'data')
 
-    def write_file(self, data: list, filename='vacancy.xlsx') -> None:
-        path_file = path.join(self.__path_data, filename)
+    def write_file(self, data: list, filename='vacancy') -> None:
+        path_file = path.join(self.__path_data, f'{filename}.xlsx')
         dt = DataFrame(self.exel_format(data))
         dt.to_excel(path_file)
 

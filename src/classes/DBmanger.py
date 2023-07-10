@@ -73,7 +73,8 @@ class DBmanager:
 
         # Добавление данных в таблицу employer
         with conn.cursor() as cur:
-            for item in tqdm(data, colour='green'):
+            for item in tqdm(data, bar_format='{l_bar}{bar}{n_fmt}/{total_fmt} [{elapsed}]',
+                             colour='green'):
                 cur.execute("""
                     INSERT INTO employer (employer_id, title, url, area)
                     VALUES (%s, %s, %s, %s)
@@ -91,7 +92,8 @@ class DBmanager:
 
         # Добавление данных в таблицу vacancies
         with conn.cursor() as cur:
-            for item in tqdm(data, colour='green'):
+            for item in tqdm(data, bar_format='{l_bar}{bar}{n_fmt}/{total_fmt} [{elapsed}]',
+                             colour='green'):
                 cur.execute("""
                             INSERT INTO vacancies 
                             (employer_id, title, salary_from, salary_to, currency, area, created, url, requirement)
@@ -218,5 +220,42 @@ class DBmanager:
         conn.close()
         return data
 
-    def get_vacancies_with_keyword(self):
-        pass
+    def get_vacancies_with_keyword(self,  keyword):
+        """Поиск вакансий по ключевому слову в названии"""
+
+        # Открытие соединения с базой данных
+        conn = psycopg2.connect(dbname='vacancies', **self.params)
+
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(f"""SELECT vacancies.title,
+                        employer.title,
+                        salary_from,
+                        salary_to,
+                        currency,
+                        vacancies.area,
+                        vacancies.url,
+                        created,
+                        requirement
+                        FROM vacancies
+                        JOIN employer USING(employer_id)
+                        WHERE vacancies.title LIKE '%{keyword}%'"""
+                        )
+            data = []
+            for i in cur:
+                salary = {'from': i[2],
+                          'to': i[3],
+                          'currency': i[4]
+                          }
+                data.append({'name': i[0],
+                             'employer': i[1],
+                             "salary": salary,
+                             'area': i[5],
+                             'created': i[7],
+                             'url': i[6],
+                             'requirement': i[8]
+                             })
+
+        # Закрытие соединения
+        conn.commit()
+        conn.close()
+        return data

@@ -201,6 +201,11 @@ class WorkingWithINI(WorkingWithFiles):
         with open(path_file, 'w', encoding='utf8') as f:
             f.write(data)
 
+    def check_config(self, filename='database.ini'):
+        """Метод проверки наличия файла по заданному пути"""
+        path_file = path.join(self.__path_src, filename)
+        return path.isfile(path_file)
+
     def read_file(self, data: dict, filename: str) -> list:
         pass
 

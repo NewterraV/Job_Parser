@@ -65,6 +65,23 @@ class WorkWithDB:
         conn.commit()
         conn.close()
 
+    def clear_database(self, db_name='vacancies') -> None:
+        """Метод очищает данные из таблиц базы данных"""
+
+        # Открытие соединения с базой данных
+        conn = psycopg2.connect(dbname='vacancies', **self.params)
+
+        # Добавление данных в таблицу employer
+        with conn.cursor() as cur:
+            cur.execute("""
+                        TRUNCATE TABLE vacancies;
+                        TRUNCATE TABLE employer;
+                        """)
+
+        # Закрытие соединения
+        conn.commit()
+        conn.close()
+
     def save_data_to_employer(self, data: list[dict[str, int]]) -> None:
         """Метод добавляет данные в таблицу employer"""
 

@@ -11,6 +11,7 @@ if __name__ == "__main__":
     check_config()
     user = WorkWithUserBase()
     db = WorkWithDB()
+    db.create_database()
 
     # Запуск основного функционала программы
     while True:
@@ -21,16 +22,13 @@ if __name__ == "__main__":
                 # Выбор типа поиска
                 while True:
                     function = user.search_type_selection()
-
                     # Запуск поиска по ключевому слову
                     if function == '1':
-                        db.create_database()
                         user = WorkWithUserKeyWord()
                         user.keyword_search()
                         break
                     # # Запуск поиска по работодателю
                     elif function == '2':
-                        db.create_database()
                         user = WorkWithUserEmployer()
                         user.search_by_employer()
                         break

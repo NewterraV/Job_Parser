@@ -7,12 +7,13 @@ from src.config import config
 
 class WorkWithDB:
     """Класс для генерации и наполнения DataBase"""
-    __slots__ = 'params'
+    __slots__ = ('params', 'db_name')
 
-    def __init__(self):
+    def __init__(self, db_name='vacancies'):
         self.params = config()
+        self.db_name = db_name
 
-    def create_database(self, db_name='vacancies') -> None:
+    def create_database(self) -> None:
         """Метод создает базу данных с необходимыми таблицами"""
 
         # открытие соединения с базой данных
@@ -22,15 +23,15 @@ class WorkWithDB:
 
         # Создание новой базы данных
         try:
-            cur.execute(f"CREATE DATABASE {db_name}")
+            cur.execute(f"CREATE DATABASE {self.db_name}")
         except psycopg2.DatabaseError:
-            cur.execute(f"DROP DATABASE {db_name}")
-            cur.execute(f"CREATE DATABASE {db_name}")
+            cur.execute(f"DROP DATABASE {self.db_name}")
+            cur.execute(f"CREATE DATABASE {self.db_name}")
 
         conn.close()
 
         # Открытие соединения с созданной базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление таблицы employer
         with conn.cursor() as cur:
@@ -65,17 +66,16 @@ class WorkWithDB:
         conn.commit()
         conn.close()
 
-    def clear_database(self, db_name='vacancies') -> None:
+    def clear_database(self) -> None:
         """Метод очищает данные из таблиц базы данных"""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу employer
         with conn.cursor() as cur:
             cur.execute("""
-                        TRUNCATE TABLE vacancies;
-                        TRUNCATE TABLE employer;
+                        TRUNCATE TABLE vacancies, employer
                         """)
 
         # Закрытие соединения
@@ -86,7 +86,7 @@ class WorkWithDB:
         """Метод добавляет данные в таблицу employer"""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу employer
         with conn.cursor() as cur:
@@ -105,7 +105,7 @@ class WorkWithDB:
         """Метод добавляет данные в таблицу vacancies"""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу vacancies
         with conn.cursor() as cur:
@@ -130,6 +130,18 @@ class WorkWithDB:
         conn.commit()
         conn.close()
 
+    def drop_db(self):
+
+        # открытие соединения с базой данных
+        conn = psycopg2.connect(dbname='postgres', **self.params)
+        conn.autocommit = True
+        cur = conn.cursor()
+
+        # Удаление базы данных
+        cur.execute(f"DROP DATABASE {self.db_name};")
+
+        conn.close()
+
 
 class DBmanager(WorkWithDB):
     """Класс для работы с данными DataBase"""
@@ -138,19 +150,20 @@ class DBmanager(WorkWithDB):
         """Метод получает список всех компаний и количество вакансий у каждой компании"""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу vacancies
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute("""SELECT employer.title, 
-                ROUND(avg(salary_from), 1) as avg_salary
+                count(vacancy_id) as count_vacancies
                 FROM employer
                 JOIN vacancies USING(employer_id)
-                GROUP BY employer_id"""
+                GROUP BY employer_id
+                ORDER BY employer.title"""
                         )
             data = []
             for i in cur:
-                data.append({'Name': i[0], 'avg_salary': float(i[1])})
+                data.append({'company': i[0], 'count vacancies': i[1]})
 
         # Закрытие соединения
         conn.commit()
@@ -162,7 +175,7 @@ class DBmanager(WorkWithDB):
         названия вакансии и зарплаты и ссылки на вакансию."""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу vacancies
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
@@ -170,7 +183,8 @@ class DBmanager(WorkWithDB):
             vacancies.title, employer.title, 
             concat(salary_from, '-', salary_to, ' ', currency) as salary, vacancies.url
             FROM vacancies
-            JOIN employer USING(employer_id)"""
+            JOIN employer USING(employer_id)
+            ORDER BY vacancies.title"""
                         )
             data = []
             for i in cur:
@@ -185,12 +199,12 @@ class DBmanager(WorkWithDB):
         """Метод получает среднюю зарплату по вакансиям"""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу vacancies
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute("""SELECT ROUND(AVG(salary_from), 1)
-                                   FROM vacancies"""
+                        FROM vacancies"""
                         )
             for i in cur:
                 data = float(i[0])
@@ -204,7 +218,7 @@ class DBmanager(WorkWithDB):
         """Метод получает список всех вакансий, у которых зарплата выше средней по всем вакансиям."""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute("""SELECT vacancies.title,
@@ -218,7 +232,8 @@ class DBmanager(WorkWithDB):
                         requirement
                         FROM vacancies
                         JOIN employer USING(employer_id)
-                        WHERE salary_from >= (SELECT AVG(salary_from) FROM vacancies)"""
+                        WHERE salary_from >= (SELECT AVG(salary_from) FROM vacancies)
+                        ORDER BY vacancies.title"""
                         )
             data = []
             for i in cur:
@@ -245,7 +260,7 @@ class DBmanager(WorkWithDB):
         """Поиск вакансий по ключевому слову в названии"""
 
         # Открытие соединения с базой данных
-        conn = psycopg2.connect(dbname='vacancies', **self.params)
+        conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(f"""SELECT vacancies.title,
@@ -259,7 +274,8 @@ class DBmanager(WorkWithDB):
                         requirement
                         FROM vacancies
                         JOIN employer USING(employer_id)
-                        WHERE vacancies.title LIKE '%{keyword}%'"""
+                        WHERE LOWER(vacancies.title) LIKE '%{keyword}%'
+                        ORDER BY vacancies.title;"""
                         )
             data = []
             for i in cur:

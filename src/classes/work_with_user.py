@@ -197,7 +197,7 @@ class WorkWithUserKeyWord(WorkWithUserBase):
 
     def get_vacancy_in_user_platform(self) -> [bool, None]:
         """Функция предлагает пользователю выбрать платформу для получения вакансий,
-        после получает вакансии и записывает их в JSON файл, при успешной работе возвращает True"""
+        после получает вакансии и сохраняет их в базу данных"""
 
         name_vacancy = input('\nВведите ключевое слово для поиска вакансий\n'
                              f'0 - Завершение программы:\n')
@@ -227,7 +227,7 @@ class WorkWithUserKeyWord(WorkWithUserBase):
                 if self.check_entry(user_volume, self.volume):
                     while True:
                         all_vacancy = get_user_vacancies(user_platform, keyword=name_vacancy,
-                                                             all_result=True if user_volume != '1' else False)
+                                                         all_result=True if user_volume != '1' else False)
                         break
 
                     if all_vacancy:
@@ -337,29 +337,42 @@ class WorkWithUserKeyWord(WorkWithUserBase):
 
     def get_vacancy_by_param(self) -> bool:
         """Функция подбирает вакансии по параметрам и выводит их пользователю в выбранном формате"""
+        # получаем список вакансий из файла
         vacancies = self.get_vacancies()
 
+        # проверяем на успешное получение списка
         if type(vacancies) is bool:
             return vacancies
 
+        # проверяем на наличие вакансий в списке
         if len(vacancies) == 0:
             print('К сожалению, вакансии с данными параметрами отсутствуют.')
             return True
         print(f'Найдено вакансий: {len(vacancies)}')
 
+        # запускаем цикл обработки вакансий
         while True:
+
             print('\nВыберите действие:')
             self.dict_print(self.__output)
             user_input = input()
+
+            # проверяем ввод на выход
             self.check_exit(user_input)
+
+            # запускаем цикл обработки
             if self.check_entry(user_input, self.__output):
+
+                # Вывод вакансий на экран
                 if user_input == '1':
                     self.print_vacancy(vacancies)
                     continue
+                # Запись вакансий в Exel
                 elif user_input == '3':
                     self.__file_exel.write_file(vacancies)
                     print('Запись выполнена')
                     continue
+                # Выводим топ 5 вакансий по зарплате
                 elif user_input == '2':
                     self.print_vacancy(get_top_vacancies(vacancies))
                     continue
@@ -376,40 +389,32 @@ class WorkWithUserEmployer(WorkWithUserBase):
         self.__db_manager = DBmanager()
         self.__api = HeadHunterAPI()
 
-    def search_by_employer(self):
+    def search_by_employer(self) -> None:
         """Основная логика работы с вакансиями по работодателю"""
 
-        while True:
-            # создание базы данных
-            self.__db_manager.create_database()
-            # Получение списка работодателей
-            user_employers = self.get_user_employers()
+        # создание базы данных
+        self.__db_manager.create_database()
+        # Получение списка работодателей
+        user_employers = self.get_user_employers()
 
-            # Запрос по API
-            all_employers = self.__api.get_employers(user_employers)
-            # Сохранение работодателей в БД
-            self.__db_manager.save_data_to_employer(all_employers)
-            # Получение вакансий по работодателю
-            all_vacancy = get_user_vacancies([HeadHunterAPI], employer_id=user_employers,
-                                             all_result=True)
-            # Сохранение вакансий в БД
+        # Запрос вакансий по API
+        employers_data = self.__api.get_data_employers(user_employers)
+        employers_vacancy = self.__api.get_data_employers(user_employers)
 
-            # Предлагаем выбрать действие с вакансиями
-            # vacancy = self.get_function()
-            # if vacancy:
-            #     continue
-            break
-
-        # Выполняем очистку файла перед завершением
-        self.__record.clear_file()
-        return True
+        # Сохранение работодателей в БД
+        print('\033[32mЗаполняю базу данных\033[0m')
+        self.__db_manager.save_data_to_employer(employers_data)
+        self.__db_manager.save_data_to_vacancies(employers_vacancy)
 
     def get_user_employers(self) -> list:
         """Метод запрашивает у пользователя список id работодателей HH"""
 
         user_input = input('Введите через запятую id работодателей для запроса (формат: 1235795, 79987456, 7854458)\n'
                            'оставьте строку пустой для загрузки по умолчанию\n')
+        # Проверяем на выход
         self.check_exit(user_input)
+        # Создаем список работодателей
         if user_input:
             return user_input.split(', ')
+        # Возврат списка по умолчанию
         return [1740, 78638, 3529, 4872, 1060266, 115, 2180, 26624, 35065]

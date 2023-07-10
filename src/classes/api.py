@@ -71,7 +71,8 @@ class HeadHunterAPI(BaseAPI):
 
         vacancy_employers = []
         print('\n\033[32mПолучаю данные по вакансиям работодателей\033[0m')
-
+        # запрашиваем вакансии по каждому работодателю отдельно для получения
+        # максимального количества результатов
         for employer in employers:
             self.employer_id = employer
             all_vacancy = self.get_all_vacancies()
@@ -160,6 +161,7 @@ class SuperJobAPI(BaseAPI):
             try:
                 vacancies.append({'name': i["profession"],
                                   'employer': i['firm_name'],
+                                  'employer_id': i['firm_id'],
                                   "salary": {'from': i['payment_from'],
                                              'to': i['payment_to'],
                                              'currency': i['currency']

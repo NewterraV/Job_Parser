@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.extras
 from tqdm import tqdm
 
 from src.config import config
@@ -55,7 +56,7 @@ class DBmanager:
                     currency VARCHAR(5),
                     area VARCHAR(70),
                     url TEXT,
-                    requirement TEXT
+                    requirement VARCHAR(255)
                     )
             """)
 
@@ -107,3 +108,59 @@ class DBmanager:
         # Закрытие соединения
         conn.commit()
         conn.close()
+
+    def get_companies_and_vacancies_count(self):
+        """Метод получает список всех компаний и количество вакансий у каждой компании"""
+
+        # Открытие соединения с базой данных
+        conn = psycopg2.connect(dbname='vacancies', **self.params)
+
+        # Добавление данных в таблицу vacancies
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute("""SELECT employer.title, 
+                ROUND(avg(salary_from), 1) as avg_salary
+                FROM employer
+                JOIN vacancies USING(employer_id)
+                GROUP BY employer_id"""
+                        )
+            data = []
+            for i in cur:
+                data.append({'Name': i[0], 'avg_salary': float(i[1])})
+
+        # Закрытие соединения
+        conn.commit()
+        conn.close()
+        return data
+
+    def get_all_vacancies(self):
+        """Метод получает список всех вакансий с указанием названия компании,
+        названия вакансии и зарплаты и ссылки на вакансию."""
+
+        # Открытие соединения с базой данных
+        conn = psycopg2.connect(dbname='vacancies', **self.params)
+
+        # Добавление данных в таблицу vacancies
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute("""SELECT 
+            vacancies.title, employer.title, 
+            concat(salary_from, '-', salary_to, ' ', currency) as salary, vacancies.url
+            FROM vacancies
+            JOIN employer USING(employer_id)"""
+                        )
+            data = []
+            for i in cur:
+                data.append({'vacancy': i[0], 'employer': i[1], 'salary': i[2], 'url': i[3]})
+
+        # Закрытие соединения
+        conn.commit()
+        conn.close()
+        return data
+
+    def get_avg_salary(self):
+        pass
+
+    def get_vacancies_with_higher_salary(self):
+        pass
+
+    def get_vacancies_with_keyword(self):
+        pass

@@ -62,7 +62,9 @@ class MixinPrint:
 
     @staticmethod
     def print_table(data: list) -> None:
+        """Метод выводит на экран данные в виде таблицы"""
         table = PrettyTable()
+        table.align = 'l'
         table_titles = ['№']
         for i in data[0].keys():
             table_titles.append(i.title())

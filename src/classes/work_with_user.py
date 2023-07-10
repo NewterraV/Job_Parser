@@ -1,11 +1,10 @@
-from easygui import passwordbox
 from prettytable import PrettyTable
 
 from src.classes.DBmanger import DBmanager
 from src.classes.api import HeadHunterAPI, SuperJobAPI
 from src.classes.employer import Employer
 from src.classes.user_exception import CheckExit
-from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel, WorkingWithINI
+from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel
 from src.classes.vacancy import Vacancy
 from src.utils import get_user_vacancies
 
@@ -145,38 +144,6 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         if user_input == '0':
             return False
         return True
-
-    @staticmethod
-    def create_config_database() -> None:
-        """Функция создает конфиг для работы с базой данных"""
-
-        record = WorkingWithINI()
-        host = input('Введите значение host (пустое поле - значение по умолчанию)\n')
-        user = input('Введите имя пользователя (пустое поле - значение по умолчанию)\n')
-        while True:
-            print('Введите пароль в отдельно появившемся окне')
-            password = passwordbox('Пароль для доступа к базе данных:')
-            if password:
-                break
-            print('\033[31mError: пароль не может быть пустым\033[0m')
-        port = input('Введите номер порта (пустое поле - значение по умолчанию)\n')
-        param = f'[postgresql]\n' \
-                f'host={host if host else "localhost"}\n' \
-                f'user={user if user else "postgres"}\n' \
-                f'password={password}\n' \
-                f'port={port if port else 5432}\n'
-        record.write_file(param)
-        print('\033[32mDataBase Config успешно сгенерирован\033[0m')
-
-    def get_volume(self) -> [bool, str]:
-        """Запрашивает у пользователя количество результатов для запроса по API"""
-        while True:
-            print('\nВыберите количество результатов:')
-            self.dict_print(self.__volume)
-            user_volume = input()
-            self.check_exit(user_volume)
-            if self.check_entry(user_volume, self.__volume):
-                return user_volume
 
     def get_aggregator(self) -> list:
         """Метод запрашивает список агрегаторов для поиска у пользователя"""

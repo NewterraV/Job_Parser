@@ -5,8 +5,8 @@ from tqdm import tqdm
 from src.config import config
 
 
-class DBmanager:
-    """Класс для работы с DataBase"""
+class WorkWithDB:
+    """Класс для генерации и наполнения DataBase"""
     __slots__ = 'params'
 
     def __init__(self):
@@ -112,6 +112,10 @@ class DBmanager:
         # Закрытие соединения
         conn.commit()
         conn.close()
+
+
+class DBmanager(WorkWithDB):
+    """Класс для работы с данными DataBase"""
 
     def get_companies_and_vacancies_count(self) -> list[dict]:
         """Метод получает список всех компаний и количество вакансий у каждой компании"""

@@ -1,10 +1,10 @@
 import pytest
 
-from src.classes.work_with_user import WorkWithUser
+from src.classes.work_with_user import WorkWithUserKeyWord
 
 @pytest.fixture
 def get_exmpl_user():
-    return WorkWithUser()
+    return WorkWithUserKeyWord()
 
 
 def test_check_exit(get_exmpl_user):

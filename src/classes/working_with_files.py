@@ -3,6 +3,7 @@ import json
 from src.classes.vacancy import Vacancy
 from src.classes.user_exception import FileIsEmpty
 from os import path
+from typing import Any
 from pandas import DataFrame
 
 
@@ -15,7 +16,7 @@ class WorkingWithFiles(ABC):
         pass
 
     @abstractmethod
-    def write_file(self, data: list, filename) -> None:
+    def write_file(self, data: Any, filename) -> None:
         """Метод записывает данные в файл JSON"""
         pass
 
@@ -95,7 +96,7 @@ class MixinFormat:
     def exel_format(data: list) -> dict:
         """Функция подготавливает данные для записи в exel"""
 
-        vacancy = {
+        vacancies = {
             "Название вакансии": [],
             "Работодатель": [],
             "Зарплата от": [],
@@ -105,22 +106,21 @@ class MixinFormat:
             "Ссылка на вакансию": [],
             "Населенный пункт": [],
             "Вакансия создана": [],
-            "Агрегатор": [],
 
         }
         for i in data:
-            vacancy['Агрегатор'].append(i.aggregator)
-            vacancy["Название вакансии"].append(i.name)
-            vacancy["Работодатель"].append(i.employer)
-            vacancy["Зарплата от"].append(i.salary_from)
-            vacancy["Зарплата до"].append(i.salary_to)
-            vacancy["В валюте"].append(i.salary_curr)
-            vacancy["Населенный пункт"].append(i.area)
-            vacancy["Вакансия создана"].append(i.created)
-            vacancy["Ссылка на вакансию"].append(i.url)
-            vacancy["Краткое описание"].append(i.requirement)
+            vacancy = Vacancy(i)
+            vacancies["Название вакансии"].append(vacancy.name)
+            vacancies["Работодатель"].append(vacancy.employer)
+            vacancies["Зарплата от"].append(vacancy.salary_from)
+            vacancies["Зарплата до"].append(vacancy.salary_to)
+            vacancies["В валюте"].append(vacancy.salary_curr)
+            vacancies["Населенный пункт"].append(vacancy.area)
+            vacancies["Вакансия создана"].append(vacancy.created)
+            vacancies["Ссылка на вакансию"].append(vacancy.url)
+            vacancies["Краткое описание"].append(vacancy.requirement)
 
-        return vacancy
+        return vacancies
 
 
 class WorkingWithJSON(WorkingWithFiles, MixinFilter):
@@ -128,7 +128,6 @@ class WorkingWithJSON(WorkingWithFiles, MixinFilter):
     __slots__ = ('__path_data_home', '__path_data')
 
     def __init__(self):
-
         self.__path_data_home = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
         self.__path_data = path.join(self.__path_data_home, 'data')
 
@@ -172,14 +171,14 @@ class WorkingWithJSON(WorkingWithFiles, MixinFilter):
 
 
 class WorkingWithExel(WorkingWithFiles, MixinFilter, MixinFormat):
+    __slots__ = ('__path_data_home', '__path_data')
 
     def __init__(self):
-
         self.__path_data_home = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
         self.__path_data = path.join(self.__path_data_home, 'data')
 
-    def write_file(self, data: list, filename='vacancy.xlsx') -> None:
-        path_file = path.join(self.__path_data, filename)
+    def write_file(self, data: list, filename='vacancy') -> None:
+        path_file = path.join(self.__path_data, f'{filename}.xlsx')
         dt = DataFrame(self.exel_format(data))
         dt.to_excel(path_file)
 
@@ -188,3 +187,28 @@ class WorkingWithExel(WorkingWithFiles, MixinFilter, MixinFormat):
 
     def read_file(self, data: dict, filename: str) -> list:
         pass
+
+
+class WorkingWithINI(WorkingWithFiles):
+    __slots__ = ('__path_data_home', '__path_data')
+
+    def __init__(self):
+        self.__path_data_home = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+        self.__path_src = path.join(self.__path_data_home, 'src')
+
+    def write_file(self, data: Any, filename='database.ini') -> None:
+        path_file = path.join(self.__path_src, filename)
+        with open(path_file, 'w', encoding='utf8') as f:
+            f.write(data)
+
+    def check_config(self, filename='database.ini'):
+        """Метод проверки наличия файла по заданному пути"""
+        path_file = path.join(self.__path_src, filename)
+        return path.isfile(path_file)
+
+    def read_file(self, data: dict, filename: str) -> list:
+        pass
+
+    def clear_file(self, filename: str) -> None:
+        pass
+

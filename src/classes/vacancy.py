@@ -1,33 +1,28 @@
-from datetime import datetime
-
-
 class Vacancy:
     """Базовый класс вакансии"""
 
-    __slots__ = ('__name', '__aggregator', '__employer', '__salary_from', '__salary_to',
+    __slots__ = ('__name', '__employer', '__salary_from', '__salary_to',
                  '__salary_curr', '__area', '__created', '__url', '__requirement')
 
     def __init__(self, data: dict):
         self.__name = data['name']
-        self.__aggregator = data['aggregator']
         self.__employer = data['employer']
         self.__salary_from = data['salary']['from'] if data['salary']['from'] else 0
         self.__salary_to = data['salary']['to'] if data['salary']['to'] else 0
         self.__salary_curr = data['salary']['currency'].upper() if data['salary']['currency'] else 'Не указано'
         self.__area = data['area'].title()
-        self.__created = datetime.fromisoformat(data['created']).strftime("%d.%m.%y")
+        self.__created = data['created']
         self.__url = data['url']
         self.__requirement = data['requirement']
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.__name}, {self.__aggregator}, {self.__employer})'
+        return f'{self.__class__.__name__}({self.__name}, {self.__employer})'
 
     def __str__(self):
         return f'\nВакансия "{self.__name}" от компании "{self.__employer}".\nЗарплата от: {self.__salary_from} '\
                f'до: {self.__salary_to} в валюте: {self.__salary_curr}\nМесто расположения:'\
                f' {self.__area}, url: {self.__url}'\
-               f'\nКраткое описание:\n {self.__requirement}\nДата публикации: {self.__created}\n'\
-               f'Вакансия получена от портала: {self.__aggregator}\n'
+               f'\nКраткое описание:\n {self.__requirement}\nДата публикации: {self.__created}\n'
 
     def __lt__(self, other):
         salary_list = self.get_max_salary(self, other)
@@ -44,10 +39,6 @@ class Vacancy:
     def __ge__(self, other):
         salary_list = self.get_max_salary(self, other)
         return salary_list[0] >= salary_list[1]
-
-    @property
-    def aggregator(self):
-        return self.__aggregator
 
     @property
     def employer(self):

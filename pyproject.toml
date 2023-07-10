@@ -14,6 +14,7 @@ inline-input = "^1.1"
 easygui = "^0.98.3"
 psycopg2 = "^2.9.6"
 tqdm = "^4.65.0"
+prettytable = "^3.8.0"
 
 
 [tool.poetry.group.dev.dependencies]

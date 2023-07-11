@@ -200,15 +200,13 @@ class WorkWithUserKeyWord(WorkWithUserBase):
             self.__gui.print_message('К сожалению по вашему запросу нет вакансий', title='Error', color='lightpink')
             raise CheckExit
 
-        print(f'\033[32mУспех, количество полученных вакансий: {len(all_vacancy)}\033[m')
-
         # Получаем список уникальных id работодателей из списка вакансий
         employer_ids = self.__employer.get_list_employer(all_vacancy)
         employer_data = self.__api.get_data_employers(employer_ids)
 
-        print('\033[32mЗаполняю базу данных\033[0m')
         self.__db_manager.save_data_to_employer(employer_data)
         self.__db_manager.save_data_to_vacancies(all_vacancy)
+        GUI.print_message(f'Успех, получено вакансий: {len(all_vacancy)}')
 
     @property
     def record(self):
@@ -320,7 +318,8 @@ class WorkWithUserFilters(WorkWithUserBase):
 
     def get_avg_salary(self) -> bool:
         data = self.__db_manager.get_avg_salary()
-        print(f'Средняя зарплата по всем вакансиям: \033[34m{data}\033[0m\n')
+        self.__gui.print_message(f'Средняя зарплата по всем вакансиям: {data}')
+
         return True
 
     def get_vacancies_with_higher_salary(self):

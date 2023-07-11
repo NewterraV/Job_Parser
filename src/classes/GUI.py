@@ -91,3 +91,12 @@ class GUI(MixinFormat):
                 raise CheckExit
             window.close()
             return True
+
+    @staticmethod
+    def get_progress_bar(title, number):
+        """Метод возвращает настройки для запуска интерфейса отображения выполнения"""
+
+        layout = [[sg.Text(title)],
+                  [sg.ProgressBar(number, orientation='h', size=(20, 20), key='progress')],
+                  [sg.Text(key='item', size=30)]]
+        return layout

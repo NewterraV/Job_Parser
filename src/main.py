@@ -5,7 +5,6 @@ from src.classes.GUI import GUI
 from utils import check_config, create_config_database
 from requests import HTTPError, ConnectionError
 from psycopg2 import ProgrammingError
-# import PySimpleGUI as sg
 
 if __name__ == "__main__":
     # Проверка наличия конфигурационного файла

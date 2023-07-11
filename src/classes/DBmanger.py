@@ -1,8 +1,9 @@
 import psycopg2
 import psycopg2.extras
-from tqdm import tqdm
+import PySimpleGUI as sg
 
 from src.config import config
+from src.classes.GUI import GUI
 
 
 class WorkWithDB:
@@ -85,17 +86,25 @@ class WorkWithDB:
     def save_data_to_employer(self, data: list[dict[str, int]]) -> None:
         """Метод добавляет данные в таблицу employer"""
 
+        layout = GUI.get_progress_bar(f'Сохраняю данные работодателей:', len(data))
+
+        window = sg.Window('Загрузка', layout=layout)
+
         # Открытие соединения с базой данных
         conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу employer
         with conn.cursor() as cur:
-            for item in tqdm(data, bar_format='{l_bar}{bar}{n_fmt}/{total_fmt} [{elapsed}]',
-                             colour='green'):
+            for i, item in enumerate(data):
                 cur.execute("""
                     INSERT INTO employer (employer_id, title, url, area)
                     VALUES (%s, %s, %s, %s)
                 """, (item['id'], item['name'], item['url'], item['area']))
+                window.read(timeout=0)
+                window['item'].Update(value=f'{i} из {len(data)}')
+                window['progress'].update_bar(i + 1)
+
+        window.close()
 
         # Закрытие соединения
         conn.commit()
@@ -104,13 +113,16 @@ class WorkWithDB:
     def save_data_to_vacancies(self, data) -> None:
         """Метод добавляет данные в таблицу vacancies"""
 
+        layout = GUI.get_progress_bar(f'Сохраняю данные вакансий:', len(data))
+
+        window = sg.Window('Загрузка', layout=layout)
+
         # Открытие соединения с базой данных
         conn = psycopg2.connect(dbname=self.db_name, **self.params)
 
         # Добавление данных в таблицу vacancies
         with conn.cursor() as cur:
-            for item in tqdm(data, bar_format='{l_bar}{bar}{n_fmt}/{total_fmt} [{elapsed}]',
-                             colour='green'):
+            for i, item in enumerate(data):
                 cur.execute("""
                             INSERT INTO vacancies 
                             (employer_id, title, salary_from, salary_to, currency, area, created, url, requirement)
@@ -125,6 +137,11 @@ class WorkWithDB:
                               item['url'],
                               item["requirement"]
                               ))
+                window.read(timeout=0)
+                window['item'].Update(value=f'{i} из {len(data)}')
+                window['progress'].update_bar(i + 1)
+
+            window.close()
 
         # Закрытие соединения
         conn.commit()

@@ -94,10 +94,8 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
                                    {'title': 'Сгенерировать DataBase Config', 'key': '2'}]}
 
     # Данные для выбора количества вакансий при поиске
-    __volume = {
-        '1': '100 вакансий на одну платформу.',
-        '2': 'Максимально возможное количество.'
-    }
+    __volume = {'1': '100 вакансий на одну платформу.',
+                '2': 'Максимально возможное количество.'}
 
     # Данные для выбора агрегатора
     __aggregator = {'1': ['HeadHunter', HeadHunterAPI],
@@ -117,11 +115,12 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
 
     def get_keyword(self):
         """Метод запрашивает у пользователя ключевое слово"""
-        name_vacancy = input('\nВведите ключевое слово для поиска вакансий\n'
-                             f'0 - Завершение программы:\n')
+        data = {'name': 'Введите ключевое слово для поиска вакансий:',
+                'line': ['Ключевое слово']}
+        response = self.__gui.create_input_field(data)
+        name_vacancy = response[0]
 
-        self.check_exit(name_vacancy)
-        return name_vacancy.lower()
+        return name_vacancy[0].lower()
 
     def search_type_selection(self) -> str:
         """Функция запрашивает у пользователя тип поиска вакансий"""
@@ -174,22 +173,6 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
 class WorkWithUserKeyWord(WorkWithUserBase):
     """Класс с набором методов для работы с пользователем при поиске вакансий по ключевому слову"""
 
-    __function_all = {'1': 'Получить список вакансий с использованием фильтров',
-                      '2': 'Получить топ 5 вакансий по зарплате',
-                      '3': 'Записать все вакансии в файл Excel',
-                      '4': 'Удалить вакансии'}
-
-    __data_filter = {'name': None,
-                     'salary': None,
-                     'area': None,
-                     'keyword': None}
-
-    __output = {'1': 'Вывести все вакансии на экран',
-                '3': 'Вывести топ 5 вакансий по зарплате на экран',
-                '4': 'Записать в файл Excel',
-                '5': 'Вернуться к функциям'
-                }
-
     def __init__(self):
         super().__init__()
         self.__record = WorkingWithJSON()
@@ -197,6 +180,7 @@ class WorkWithUserKeyWord(WorkWithUserBase):
         self.__db_manager = DBmanager()
         self.__api = HeadHunterAPI()
         self.__employer = Employer()
+        self.__gui = GUI()
 
     def keyword_search(self) -> None:
         """Основная логика работы с вакансиями по ключевому слову"""
@@ -213,7 +197,7 @@ class WorkWithUserKeyWord(WorkWithUserBase):
                                          all_result=True if user_volume != '1' else False)
 
         if not all_vacancy:
-            print('\033[31mК сожалению по вашему запросу нет вакансий\033[0m')
+            self.__gui.print_message('К сожалению по вашему запросу нет вакансий', title='Error', color='lightpink')
             raise CheckExit
 
         print(f'\033[32mУспех, количество полученных вакансий: {len(all_vacancy)}\033[m')
@@ -255,6 +239,7 @@ class WorkWithUserEmployer(WorkWithUserBase):
         self.__file_exel = WorkingWithExel()
         self.__db_manager = DBmanager()
         self.__api = HeadHunterAPI()
+        self.__gui = GUI()
 
     def search_by_employer(self) -> None:
         """Основная логика работы с вакансиями по работодателю"""
@@ -273,39 +258,38 @@ class WorkWithUserEmployer(WorkWithUserBase):
 
     def get_user_employers(self) -> list:
         """Метод запрашивает у пользователя список id работодателей HH"""
+        data = {'name': 'Введите id работодателей для запроса:\n'
+                        'Оставьте строки пустыми для загрузки вакансий работодателей по умолчанию\n',
+                'line': ['Работодатель ' + str(i) for i in range(1, 11)]}
+        response = self.__gui.create_input_field(data)
+        user_employers = [value for value in response.values() if value]
 
-        user_input = input('Введите через запятую id работодателей для запроса '
-                           '\033[34m(формат: 1235795, 79987456, 7854458)\033[0m\n'
-                           'Оставьте строку пустой для загрузки вакансий работодателей по умолчанию\n'
-                           '0 - завершение программы\n')
-        # Проверяем на выход
-        self.check_exit(user_input)
-        # Создаем список работодателей
-        if user_input:
-            return user_input.split(', ')
-        # Возврат списка по умолчанию
+        if len(user_employers):
+            return user_employers
         return [1740, 78638, 3529, 4872, 1060266, 115, 2180, 26624, 35065]
 
 
 class WorkWithUserFilters(WorkWithUserBase):
     """Класс для работы с пользователем при анализе полученных вакансий"""
 
-    __filters_name = {'1': 'Вывести на экран список работодателей и количество вакансий у них;',
-                      '2': 'Вывести на экран список всех вакансий;',
-                      '3': 'Получить среднюю зарплату по всем вакансиям',
-                      '4': 'Получить вакансии с зарплатой выше среднего',
-                      '5': 'Поиск вакансий по ключевому слову в названии'}
+    __filters_name = {'name': 'Анализ полученных вакансий.\nВыберите действие:',
+                      'buttons': [{'title': 'Вывести количество вакансий по работодателю', 'key': '1'},
+                                  {'title': 'Вывести список всех вакансий', 'key': '2'},
+                                  {'title': 'Вывести среднюю зарплату по всем вакансиям', 'key': '3'},
+                                  {'title': 'Получить вакансии с зарплатой выше среднего', 'key': '4'},
+                                  {'title': 'Поиск вакансий по ключевому слову в названии', 'key': '5'}]}
 
-    __output = {'1': 'Вывести все вакансии на экран',
-                '2': 'Вывести все вакансии на экран в виде таблицы',
-                '3': 'Записать в файл Excel',
-                '4': 'Вернуться к функциям'
-                }
+    __output = {'name': 'Что сделать с полученным результатом?:',
+                'buttons': [{'title': 'Вывести все вакансии на экран', 'key': '1'},
+                            {'title': 'Вывести все вакансии на экран в виде таблицы', 'key': '2'},
+                            {'title': 'Записать в файл Excel', 'key': '3'},
+                            {'title': 'Вернуться к функциям', 'key': '4'}]}
 
     def __init__(self):
         super().__init__()
         self.__db_manager = DBmanager()
         self.__file_exel = WorkingWithExel()
+        self.__gui = GUI()
         self.__filters = {'1': self.get_companies_and_vacancies_count,
                           '2': self.get_all_vacancies,
                           '3': self.get_avg_salary,
@@ -315,12 +299,8 @@ class WorkWithUserFilters(WorkWithUserBase):
     def job_analysis(self):
         """Метод на основе ответов пользователя возвращает необходимые данные о вакансиях"""
         while True:
-            print('\n\033[33mАнализ полученных вакансий.\n\033[0mВыберите действие:\n')
-            self.dict_print(self.__filters_name)
-            user_input = input()
-            self.check_exit(user_input)
-            if not self.check_entry(user_input, self.__filters_name):
-                continue
+            user_input = self.__gui.create_buttons(self.__filters_name)
+
             status = self.__filters[user_input]()
             if status:
                 continue
@@ -330,12 +310,12 @@ class WorkWithUserFilters(WorkWithUserBase):
     def get_companies_and_vacancies_count(self) -> [None, bool]:
         """Метод выводит на экран таблицу с компаниями и средней зарплатой по ним"""
         data = self.__db_manager.get_companies_and_vacancies_count()
-        self.print_table(data)
-        return True
+        if self.__gui.create_table(data):
+            return True
 
     def get_all_vacancies(self) -> [bool, None]:
         data = self.__db_manager.get_all_vacancies()
-        self.print_table(data)
+        self.__gui.create_table(data)
         return True
 
     def get_avg_salary(self) -> bool:
@@ -360,18 +340,14 @@ class WorkWithUserFilters(WorkWithUserBase):
 
     def output_result(self, data: list) -> bool:
         while True:
-            print('\n\033[33mЧто сделать с полученным результатом?\033[0m')
-            self.dict_print(self.__output)
-            user_input = input()
-            self.check_exit(user_input)
-            if not self.check_entry(user_input, self.__output):
-                continue
+            user_input = self.__gui.create_buttons(self.__output)
 
             if user_input == '1':
                 self.print_vacancy(data)
             elif user_input == '2':
-                self.print_table(data)
+                self.__gui.create_table(data)
             elif user_input == '3':
+
                 filename = input("Введите название файла:\n")
                 self.__file_exel.write_file(data, filename=filename)
             elif user_input == '4':

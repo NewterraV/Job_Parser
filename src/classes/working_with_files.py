@@ -93,6 +93,18 @@ class MixinFilter:
 class MixinFormat:
 
     @staticmethod
+    def table_formatting(data: list[dict]) -> dict:
+        """Метод форматирует список словарей в данные необходимые для отрисовки таблицы"""
+
+        headings = [key for key in data[0].keys()]
+        data_format = []
+        for i in data:
+            data_format.append([value for value in i.values()])
+
+        return {'headings': headings, 'values': data_format}
+
+
+    @staticmethod
     def exel_format(data: list) -> dict:
         """Функция подготавливает данные для записи в exel"""
 

@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 from typing import Any
 from src.classes.user_exception import CheckExit
 from src.classes.working_with_files import MixinFormat
+from src.classes.vacancy import Vacancy
 
 
 class GUI(MixinFormat):
@@ -81,7 +82,7 @@ class GUI(MixinFormat):
                             row_height=20,
                             tooltip='This is a table')],
                   [sg.Text(f'Количество результатов: {len(f_data["values"])}')],
-                  [[sg.OK(), sg.Cancel('Exit')]]]
+                  [sg.OK(), sg.Cancel('Exit')]]
 
         window = sg.Window('Парсер вакансий', layout)
         event, values = window.read()
@@ -100,3 +101,39 @@ class GUI(MixinFormat):
                   [sg.ProgressBar(number, orientation='h', size=(20, 20), key='progress')],
                   [sg.Text(key='item', size=30)]]
         return layout
+
+    @staticmethod
+    def print_vacancy(data):
+        """Функция выводит информацию о вакансиях на экран"""
+        count = 0
+        vacancy = Vacancy(data[count])
+
+        layout = [[sg.Text(f'Вакансия {count + 1} из {len(data)}', key='number', size=80)],
+                  [sg.Text(str(vacancy), key='item')],
+                  [sg.Button('Назад', key='<'), sg.Button('Далее', key='>')],
+                  [sg.OK('Вернуться к функциям', key=0), sg.Cancel('Exit')]]
+
+        window = sg.Window('Информация о вакансии', layout)
+
+        while True:
+            event, values = window.read()
+            if event == '<':
+                if count == -len(data) + 1:
+                    count = 0
+                else:
+                    count -= 1
+            elif event == '>':
+                if count == len(data) - 1:
+                    count = 0
+                else:
+                    count += 1
+            elif event == 'Exit':
+                window.close()
+                raise CheckExit
+            elif event == 0:
+                window.close()
+                return
+            vacancy = Vacancy(data[count])
+            number = count + 1 if count >= 0 else len(data) + count - 1 if event == ">" else len(data) + count + 1
+            window['number'].update(f'Вакансия {number} из {len(data)}')
+            window['item'].update(str(vacancy))

@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "poetry install"
+version = "0.1.0"
+description = ""
+authors = ["Vladislav_Poroshin <vld.poroshin@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+pandas = "^2.0.2"
+openpyxl = "^3.1.2"
+inline-input = "^1.1"
+easygui = "^0.98.3"
+psycopg2 = "^2.9.6"
+tqdm = "^4.65.0"
+prettytable = "^3.8.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+pytest-cov = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

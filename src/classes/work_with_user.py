@@ -252,6 +252,7 @@ class WorkWithUserEmployer(WorkWithUserBase):
         # Сохранение работодателей в БД
         self.__db_manager.save_data_to_employer(employers_data)
         self.__db_manager.save_data_to_vacancies(employers_vacancy)
+        GUI.print_message(f'Успех, получено вакансий: {len(employers_vacancy)}')
 
     def get_user_employers(self) -> list:
         """Метод запрашивает у пользователя список id работодателей HH"""
@@ -323,7 +324,7 @@ class WorkWithUserFilters(WorkWithUserBase):
 
     def get_vacancies_with_higher_salary(self):
         data = self.__db_manager.get_vacancies_with_higher_salary()
-        print(f'Найдено результатов: \033[34m{len(data)}\033[0m')
+        self.__gui.print_message(f'Найдено результатов: {len(data)}')
         if self.output_result(data):
             return True
         return
@@ -331,7 +332,7 @@ class WorkWithUserFilters(WorkWithUserBase):
     def get_vacancies_with_keyword(self):
 
         data = self.__db_manager.get_vacancies_with_keyword(self.get_keyword())
-        print(f'Найдено результатов: \033[34m{len(data)}\033[0m')
+        self.__gui.print_message(f'Найдено результатов: {len(data)}')
         if self.output_result(data):
             return True
         return

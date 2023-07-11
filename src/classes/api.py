@@ -91,7 +91,6 @@ class HeadHunterAPI(BaseAPI):
             vacancy_employers.extend(all_vacancy)
 
         window.close()
-        GUI.print_message(f'Успех, получено вакансий: {len(vacancy_employers)}')
 
         return vacancy_employers
 

@@ -32,7 +32,7 @@ class GUI:
         if check_exit:
             layout.append([sg.Cancel('Exit')])
 
-        window = sg.Window('Создание DataBase Config', layout)
+        window = sg.Window('Парсер вакансий', layout)
         event, values = window.read()
         while True:
             if event in (sg.WIN_CLOSED, 'Exit'):
@@ -41,22 +41,27 @@ class GUI:
             window.close()
             return event
 
-    def create_input_field(self, data: dict[str, list[dict[Any]]], check_exit=True) -> list[str]:
+    def create_input_field(self, data: dict[str, list[str]], check_exit=True, check_value=False) -> dict[str, int]:
         """Метод создает поле для ввода на основе словаря с параметрами"""
 
         layout = [[sg.Text(data['name'])]]
         for i in data['line']:
-            layout.append([sg.Text(i['title'], size=40),
-                           sg.InputText()])
+            layout.append([sg.Text(i, size=20),
+                           sg.InputText(size=20)])
         if check_exit:
-            layout.append([sg.Cancel('Exit')])
-        window = sg.Window('Создание DataBase Config', layout)
+            layout.append([sg.OK(), sg.Cancel('Exit')])
+        else:
+            layout.append([sg.OK()])
+
+        window = sg.Window('Парсер вакансий', layout)
         event, values = window.read()
         while True:
             if event in (sg.WIN_CLOSED, 'Exit'):
                 window.close()
                 raise CheckExit
-            elif len(values) == 0:
-                self.print_message('Необходимо ввести минимум одно значение', title='Error', color='lightpink')
-                continue
+            if check_value:
+                if len(values) == 0:
+                    self.print_message('Необходимо ввести минимум одно значение', title='Error', color='lightpink')
+                    continue
+            window.close()
             return values

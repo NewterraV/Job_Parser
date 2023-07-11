@@ -1,9 +1,11 @@
 from src.classes.work_with_user import WorkWithUserBase, WorkWithUserKeyWord, WorkWithUserEmployer, WorkWithUserFilters
 from src.classes.DBmanger import WorkWithDB
 from src.classes.user_exception import CheckExit
-from utils import check_config, create_config_database, print_message
+from src.classes.GUI import GUI
+from utils import check_config, create_config_database
 from requests import HTTPError, ConnectionError
 from psycopg2 import ProgrammingError
+# import PySimpleGUI as sg
 
 if __name__ == "__main__":
     # Проверка наличия конфигурационного файла
@@ -40,17 +42,17 @@ if __name__ == "__main__":
                 user.job_analysis()
 
             except (HTTPError, ConnectionError):
-                print_message('Неполадки с подключением к серверу:', title='Error', color='lightpink')
+                GUI.print_message('Неполадки с подключением к серверу:', title='Error', color='lightpink')
                 break
 
             except CheckExit:
-                print_message('Выполняется выход из приложения.')
+                GUI.print_message('Выполняется выход из приложения.')
                 break
 
             except ProgrammingError:
-                print_message('ВНИМАНИЕ:неверно сконфигурирован'
-                              ' файл конфигурации для доступа к базе данных.'
-                              '\nПриступаю к генерации:', title='Error', color='lightpink')
+                GUI.print_message('ВНИМАНИЕ:неверно сконфигурирован'
+                                  ' файл конфигурации для доступа к базе данных.'
+                                  '\nПриступаю к генерации:', title='Error', color='lightpink')
 
                 create_config_database()
                 break

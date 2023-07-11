@@ -1,7 +1,8 @@
 from requests import HTTPError, ConnectionError
-import PySimpleGUI as sg
 from src.classes.working_with_files import WorkingWithINI
 from src.classes.user_exception import CheckExit
+from src.classes.GUI import GUI
+import PySimpleGUI as sg
 
 
 def get_user_vacancies(user_platform, keyword=None, all_result=False) -> [list, False]:
@@ -52,6 +53,7 @@ def create_config_database() -> None:
             window.close()
             raise CheckExit
         if not values['password']:
+            GUI.print_message('поле "Пароль" не может быть пустым', title='Error', color='lightpink')
             continue
         if event in (sg.WIN_CLOSED, 'OK'):
             param = f'[postgresql]\n' \
@@ -63,14 +65,14 @@ def create_config_database() -> None:
         break
     window.close()
 
-    print_message('DataBase Config успешно сгенерирован', color='orange')
+    GUI.print_message('DataBase Config успешно сгенерирован', color='orange')
 
 
 def check_config():
     record = WorkingWithINI()
     if not record.check_config():
-        print_message('ВНИМАНИЕ: отсутствует файл конфигурации для доступа к базе данных.'
-                      '\nСгенерируйте конфигурационный файл', title='Error', color='lightpink')
+        GUI.print_message('ВНИМАНИЕ: отсутствует файл конфигурации для доступа к базе данных.'
+                          '\nСгенерируйте конфигурационный файл', title='Error', color='lightpink')
         create_config_database()
 
 
@@ -83,17 +85,3 @@ def get_volume(self) -> [bool, str]:
         self.check_exit(user_volume)
         if self.check_entry(user_volume, self.__volume):
             return user_volume
-
-
-def print_message(text, title='Сообщение', color=None):
-    """Метод выводит окно с сообщением"""
-
-    layout = [[sg.Text(text, text_color=color)],
-              [sg.OK()]]
-
-    window = sg.Window(title, layout)
-    while True:
-        event, values = window.read()
-        if event in (sg.WIN_CLOSED, 'OK'):
-            break
-    window.close()

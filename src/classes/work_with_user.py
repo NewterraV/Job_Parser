@@ -120,7 +120,7 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         response = self.__gui.create_input_field(data)
         name_vacancy = response[0]
 
-        return name_vacancy[0].lower()
+        return name_vacancy.lower()
 
     def search_type_selection(self) -> str:
         """Функция запрашивает у пользователя тип поиска вакансий"""
@@ -250,7 +250,6 @@ class WorkWithUserEmployer(WorkWithUserBase):
         employers_vacancy = self.__api.get_employer_vacancies(user_employers)
 
         # Сохранение работодателей в БД
-        print('\033[32mЗаполняю базу данных\033[0m')
         self.__db_manager.save_data_to_employer(employers_data)
         self.__db_manager.save_data_to_vacancies(employers_vacancy)
 

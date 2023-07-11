@@ -82,17 +82,24 @@ class MixinPrint:
 
 class WorkWithUserBase(MixinCheckInput, MixinPrint):
     """Базовый класс для работы с пользователем"""
-    __type_selection = [{'title': 'По ключевому слову', 'key': '1'},
-                       {'title': 'По работодателю', 'key': '2'}]
 
-    __main_function = [{'title': 'Поиск вакансий', 'key': '1'},
-                       {'title': 'Сгенерировать DataBase Config', 'key': '2'}]
+    # Данные для выбора типа поиска
+    __type_selection = {'name': 'Выберите функцию:',
+                        'buttons': [{'title': 'По ключевому слову', 'key': '1'},
+                                    {'title': 'По работодателю', 'key': '2'}]}
 
+    # Данные для выбора основной функции
+    __main_function = {'name': 'Выберите функцию:',
+                       'buttons': [{'title': 'Поиск вакансий', 'key': '1'},
+                                   {'title': 'Сгенерировать DataBase Config', 'key': '2'}]}
+
+    # Данные для выбора количества вакансий при поиске
     __volume = {
         '1': '100 вакансий на одну платформу.',
         '2': 'Максимально возможное количество.'
     }
 
+    # Данные для выбора агрегатора
     __aggregator = {'1': ['HeadHunter', HeadHunterAPI],
                     '2': ['SuperJob', SuperJobAPI]
                     }
@@ -124,14 +131,13 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         """Метод выводит окно с выбором функции, возвращает текстовое значение выбранное пользователем"""
         return self.__gui.create_buttons(self.__main_function)
 
-    @staticmethod
-    def get_repeat():
+    def get_repeat(self):
         """Запрашивает повтор поиска вакансий"""
-        print('\nВыполнить новый поиск?\n1 - Да\n0 - завершить программу\n')
-        user_input = input()
-        if user_input == '0':
-            return False
-        return True
+
+        data = {'name': 'Выполнить новый поиск?',
+                'buttons': [{'title': 'Да', 'key': True},
+                            {'title': 'Нет', 'key': False}]}
+        return self.__gui.create_buttons(data, check_exit=False)
 
     def get_aggregator(self) -> list:
         """Метод запрашивает список агрегаторов для поиска у пользователя"""
@@ -150,19 +156,19 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
             user_aggregator = [self.__aggregator[i][1] for i in user_input.split(', ')]
             return user_aggregator
 
-    def get_repeat_analyses(self):
-        user_input = input('Любая клавиша - вернуться к анализу вакансий\n0 - завершение программы\n')
-        self.check_exit(user_input)
-        return
+    def get_repeat_analyses(self) -> [bool, None]:
+        data = {'name': 'Вернуться к анализу вакансий?:',
+                'buttons': [{'title': 'Да', 'key': True},
+                            {'title': 'Нет', 'key': False}]}
+        return self.__gui.create_buttons(data, check_exit=False)
 
-    @staticmethod
-    def get_drop_db() -> bool:
+    def get_drop_db(self) -> bool:
         """Метод выдает запрос на удаление базы данных"""
-        print('\033[31m0 - Удалить созданную базу данных перед выходом\033[32m\nEnter - выйти без удаления\033[0m')
-        user_input = input()
-        if user_input == '0':
-            return True
-        return False
+        data = {'name': 'Удалить созданную базу данных перед выходом?:',
+                'buttons': [{'title': 'Да', 'key': True},
+                            {'title': 'Нет', 'key': False}]}
+
+        return self.__gui.create_buttons(data, check_exit=False)
 
 
 class WorkWithUserKeyWord(WorkWithUserBase):

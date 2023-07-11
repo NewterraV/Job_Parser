@@ -45,7 +45,7 @@ def create_config_database() -> None:
               [sg.Text('Номер порта:', size=15), sg.InputText(key='port', default_text='5432')],
                [sg.OK(), sg.Cancel('Exit')]],
               [[sg.Text('DataBase Config успешно сгенерирован')],
-               [sg.OK(), sg.Cancel()]]]
+               [sg.OK()]]]
 
     window = sg.Window('Создание DataBase Config', layout[0])
     while True:
@@ -68,12 +68,10 @@ def create_config_database() -> None:
     window = sg.Window('Успех', layout[1])
     while True:
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, 'Exit'):
-            window.close()
-            raise CheckExit
         if event in (sg.WIN_CLOSED, 'OK'):
             break
     window.close()
+
 
 def check_config():
     record = WorkingWithINI()

@@ -43,7 +43,7 @@ def create_config_database() -> None:
                sg.InputText(key='user_name', default_text='postgres')],
               [sg.Text('Пароль:', size=15), sg.InputText(key='password', password_char='*', do_not_clear=True)],
               [sg.Text('Номер порта:', size=15), sg.InputText(key='port', default_text='5432')],
-               [sg.OK(), sg.Cancel('Exit')]]
+              [sg.OK(), sg.Cancel('Exit')]]
 
     window = sg.Window('Создание DataBase Config', layout)
     while True:
@@ -63,14 +63,14 @@ def create_config_database() -> None:
         break
     window.close()
 
-    print_message('DataBase Config успешно сгенерирован')
+    print_message('DataBase Config успешно сгенерирован', color='orange')
 
 
 def check_config():
     record = WorkingWithINI()
     if not record.check_config():
-        print(('\033[31mВНИМАНИЕ: отсутствует файл конфигурации для доступа к базе данных.'
-               '\nСгенерируйте конфигурационный файл\033[0m'))
+        print_message('ВНИМАНИЕ: отсутствует файл конфигурации для доступа к базе данных.'
+                      '\nСгенерируйте конфигурационный файл', title='Error', color='lightpink')
         create_config_database()
 
 
@@ -85,13 +85,13 @@ def get_volume(self) -> [bool, str]:
             return user_volume
 
 
-def print_message(text):
+def print_message(text, title='Сообщение', color=None):
     """Метод выводит окно с сообщением"""
 
-    layout = [[sg.Text(text)],
-               [sg.OK()]]
+    layout = [[sg.Text(text, text_color=color)],
+              [sg.OK()]]
 
-    window = sg.Window('Сообщение', layout)
+    window = sg.Window(title, layout)
     while True:
         event, values = window.read()
         if event in (sg.WIN_CLOSED, 'OK'):

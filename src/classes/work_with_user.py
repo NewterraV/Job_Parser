@@ -338,17 +338,20 @@ class WorkWithUserFilters(WorkWithUserBase):
         return
 
     def output_result(self, data: list) -> bool:
+        output_keyword = {'name': 'Введите имя файла:',
+                          'line': ['Имя файла']}
+
         while True:
             user_input = self.__gui.create_buttons(self.__output)
 
             if user_input == '1':
-                self.print_vacancy(data)
+                self.__gui.print_vacancy(data)
             elif user_input == '2':
                 self.__gui.create_table(data)
             elif user_input == '3':
 
-                filename = input("Введите название файла:\n")
-                self.__file_exel.write_file(data, filename=filename)
+                filename = self.__gui.create_input_field(output_keyword)
+                self.__file_exel.write_file(data, filename=filename[0])
             elif user_input == '4':
                 return True
             continue

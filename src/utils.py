@@ -1,6 +1,7 @@
 from requests import HTTPError, ConnectionError
-from easygui import passwordbox
+import PySimpleGUI as sg
 from src.classes.working_with_files import WorkingWithINI
+from src.classes.user_exception import CheckExit
 
 
 def get_user_vacancies(user_platform, keyword=None, all_result=False) -> [list, False]:
@@ -32,26 +33,47 @@ def get_user_vacancies(user_platform, keyword=None, all_result=False) -> [list, 
 
 def create_config_database() -> None:
     """Функция создает конфиг для работы с базой данных"""
-
     record = WorkingWithINI()
-    host = input('Введите значение host:\n(Enter - \033[34mlocalhost\033[0m)\n0 - завершение программы\n')
 
-    user = input('Введите имя пользователя:\n(Enter - \033[34mpostgres\033[0m)\n0 - завершение программы\n')
+    sg.theme('DarkTeal6')
+    layout = [[[sg.Text('Введите необходимые данные в форму:')],
+              [sg.Text('Host:', size=15),
+               sg.InputText(key='host', default_text='localhost')],
+              [sg.Text('Имя пользователя:', size=15),
+               sg.InputText(key='user_name', default_text='postgres')],
+              [sg.Text('Пароль:', size=15), sg.InputText(key='password', password_char='*', do_not_clear=True)],
+              [sg.Text('Номер порта:', size=15), sg.InputText(key='port', default_text='5432')],
+               [sg.OK(), sg.Cancel('Exit')]],
+              [[sg.Text('DataBase Config успешно сгенерирован')],
+               [sg.OK(), sg.Cancel()]]]
+
+    window = sg.Window('Создание DataBase Config', layout[0])
     while True:
-        print('Введите пароль в \033[33mотдельно появившемся окне\033[0m')
-        password = passwordbox('Пароль для доступа к базе данных:\n0 - завершение программы')
-        if password:
-            break
-        print('\033[31mError: пароль не может быть пустым\033[0m')
-    port = input('Введите номер порта:\n(Enter - \033[34m5432\033[0m)\n0 - завершение программы\n')
-    param = f'[postgresql]\n' \
-            f'host={host if host else "localhost"}\n' \
-            f'user={user if user else "postgres"}\n' \
-            f'password={password}\n' \
-            f'port={port if port else 5432}\n'
-    record.write_file(param)
-    print('\033[32mDataBase Config успешно сгенерирован\033[0m')
+        event, values = window.read()
+        if event in (sg.WIN_CLOSED, 'Exit'):
+            window.close()
+            raise CheckExit
+        if not values['password']:
+            continue
+        if event in (sg.WIN_CLOSED, 'OK'):
+            param = f'[postgresql]\n' \
+                    f'host={values["host"] if values["host"] else "localhost"}\n' \
+                    f'user={values["user_name"] if values["user_name"] else "postgres"}\n' \
+                    f'password={values["password"]}\n' \
+                    f'port={values["port"] if values["port"] else 5432}\n'
+            record.write_file(param)
+        break
+    window.close()
 
+    window = sg.Window('Успех', layout[1])
+    while True:
+        event, values = window.read()
+        if event in (sg.WIN_CLOSED, 'Exit'):
+            window.close()
+            raise CheckExit
+        if event in (sg.WIN_CLOSED, 'OK'):
+            break
+    window.close()
 
 def check_config():
     record = WorkingWithINI()

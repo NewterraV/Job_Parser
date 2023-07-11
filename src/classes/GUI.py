@@ -1,9 +1,10 @@
 import PySimpleGUI as sg
 from typing import Any
 from src.classes.user_exception import CheckExit
+from src.classes.working_with_files import MixinFormat
 
 
-class GUI:
+class GUI(MixinFormat):
     """Класс с методами графической оболочки"""
 
     def __init__(self):
@@ -41,7 +42,7 @@ class GUI:
             window.close()
             return event
 
-    def create_input_field(self, data: dict[str, list[str]], check_exit=True, check_value=False) -> dict[str, int]:
+    def create_input_field(self, data: dict[str, list[str]], check_exit=True, check_value=False) -> dict[Any]:
         """Метод создает поле для ввода на основе словаря с параметрами"""
 
         layout = [[sg.Text(data['name'])]]
@@ -65,3 +66,28 @@ class GUI:
                     continue
             window.close()
             return values
+
+    def create_table(self, data):
+        f_data = self.table_formatting(data)
+        layout = [[sg.Table(values=f_data['values'],
+                            headings=f_data['headings'],
+                            max_col_width=25,
+                            auto_size_columns=True,
+                            display_row_numbers=True,
+                            right_click_selects=True,
+                            justification='right',
+                            num_rows=20,
+                            key='-TABLE-',
+                            row_height=20,
+                            tooltip='This is a table')],
+                  [sg.Text(f'Количество результатов: {len(f_data["values"])}')],
+                  [[sg.OK(), sg.Cancel('Exit')]]]
+
+        window = sg.Window('Парсер вакансий', layout)
+        event, values = window.read()
+        while True:
+            if event in (sg.WIN_CLOSED, 'Exit'):
+                window.close()
+                raise CheckExit
+            window.close()
+            return True

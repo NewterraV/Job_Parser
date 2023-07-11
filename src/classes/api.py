@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from requests import get, HTTPError
-from tqdm import tqdm
+import PySimpleGUI as sg
+from src.classes.GUI import GUI
 
 
 class BaseAPI(ABC):
@@ -52,33 +53,45 @@ class HeadHunterAPI(BaseAPI):
 
     def get_data_employers(self, employers: list) -> list[dict]:
         """Метод получает информацию о работодателях"""
-
         data_employers = []
-        print('\033[32mЗагружаю данные работодателей\033[0m')
-        # Перебираем работодателей запрашивая по каждому информацию
-        for employer in tqdm(employers, bar_format='{l_bar}{bar}{n_fmt}/{total_fmt} [{elapsed}]',
-                             colour='green'):
+        layout = GUI.get_progress_bar('Загружаю данные о работодателях', len(employers))
+
+        window = sg.Window('Загрузка', layout=layout)
+
+        for i, employer in enumerate(employers):
             response = get(f'{self.__url_employers}{employer}').json()
             data_employers.append({'name': response['name'],
                                    'id': employer,
                                    'url': response['site_url'],
                                    'area': response['area']['name']}
                                   )
+            window.read(timeout=0)
+            window['item'].Update(value=f'{response["name"]}')
+            window['progress'].update_bar(i + 1)
+
+        window.close()
         return data_employers
 
     def get_employer_vacancies(self, employers: list) -> list[dict]:
         """Метод получает информацию о вакансиях по работодателю"""
 
         vacancy_employers = []
-        print('\n\033[32mПолучаю данные по вакансиям работодателей\033[0m')
+        layout = GUI.get_progress_bar('Получаю данные по вакансиям работодателей:', len(employers))
+
+        window = sg.Window('Загрузка', layout=layout)
+
         # запрашиваем вакансии по каждому работодателю отдельно для получения
         # максимального количества результатов
-        for employer in employers:
+        for i, employer in enumerate(employers):
+            window.read(timeout=0)
+            window['item'].Update(value=f'{i} из {len(employers)}')
+            window['progress'].update_bar(i + 1)
             self.employer_id = employer
             all_vacancy = self.get_all_vacancies()
             vacancy_employers.extend(all_vacancy)
 
-        print(f'Успех, найдено вакансий: {len(vacancy_employers)}')
+        window.close()
+        GUI.print_message(f'Успех, получено вакансий: {len(vacancy_employers)}')
 
         return vacancy_employers
 
@@ -113,13 +126,21 @@ class HeadHunterAPI(BaseAPI):
         """Возвращает максимально возможный список вакансий из API"""
 
         all_vacancies = []
-        for i in tqdm(range(20), bar_format='{l_bar}{bar}{n_fmt}/{total_fmt} [{elapsed}]',
-                      colour='green'):
+
+        layout = GUI.get_progress_bar(f'Получаю данные по вакансиям работодателя id: {self.employer_id}', 20)
+
+        window = sg.Window('Загрузка', layout=layout)
+
+        for i in (range(20)):
             self.get_response(i)
             # фильтрация бесполезных обращений к API для уменьшения времени выполнения
             if not self.__response.json()['items']:
                 break
             all_vacancies.extend(self.get_vacancies())
+            window.read(timeout=0)
+            window['item'].Update(value=f'Страница {i} из {20}')
+            window['progress'].update_bar(i + 1)
+        window.close()
         return all_vacancies
 
 
@@ -157,7 +178,7 @@ class SuperJobAPI(BaseAPI):
         """Возвращает список вакансий на основе атрибута __response"""
 
         vacancies = []
-        for i in tqdm(self.__response.json()['objects'], colour='green'):
+        for i in self.__response.json()['objects']:
             try:
                 vacancies.append({'name': i["profession"],
                                   'employer': i['firm_name'],

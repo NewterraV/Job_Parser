@@ -40,3 +40,23 @@ class GUI:
                 raise CheckExit
             window.close()
             return event
+
+    def create_input_field(self, data: dict[str, list[dict[Any]]], check_exit=True) -> list[str]:
+        """Метод создает поле для ввода на основе словаря с параметрами"""
+
+        layout = [[sg.Text(data['name'])]]
+        for i in data['line']:
+            layout.append([sg.Text(i['title'], size=40),
+                           sg.InputText()])
+        if check_exit:
+            layout.append([sg.Cancel('Exit')])
+        window = sg.Window('Создание DataBase Config', layout)
+        event, values = window.read()
+        while True:
+            if event in (sg.WIN_CLOSED, 'Exit'):
+                window.close()
+                raise CheckExit
+            elif len(values) == 0:
+                self.print_message('Необходимо ввести минимум одно значение', title='Error', color='lightpink')
+                continue
+            return values

@@ -36,18 +36,16 @@ def create_config_database() -> None:
     record = WorkingWithINI()
 
     sg.theme('DarkTeal6')
-    layout = [[[sg.Text('Введите необходимые данные в форму:')],
+    layout = [[sg.Text('Введите необходимые данные в форму:')],
               [sg.Text('Host:', size=15),
                sg.InputText(key='host', default_text='localhost')],
               [sg.Text('Имя пользователя:', size=15),
                sg.InputText(key='user_name', default_text='postgres')],
               [sg.Text('Пароль:', size=15), sg.InputText(key='password', password_char='*', do_not_clear=True)],
               [sg.Text('Номер порта:', size=15), sg.InputText(key='port', default_text='5432')],
-               [sg.OK(), sg.Cancel('Exit')]],
-              [[sg.Text('DataBase Config успешно сгенерирован')],
-               [sg.OK()]]]
+              [sg.OK(), sg.Cancel('Exit')]]
 
-    window = sg.Window('Создание DataBase Config', layout[0])
+    window = sg.Window('Создание DataBase Config', layout)
     while True:
         event, values = window.read()
         if event in (sg.WIN_CLOSED, 'Exit'):
@@ -65,19 +63,14 @@ def create_config_database() -> None:
         break
     window.close()
 
-    window = sg.Window('Успех', layout[1])
-    while True:
-        event, values = window.read()
-        if event in (sg.WIN_CLOSED, 'OK'):
-            break
-    window.close()
+    print_message('DataBase Config успешно сгенерирован', color='orange')
 
 
 def check_config():
     record = WorkingWithINI()
     if not record.check_config():
-        print(('\033[31mВНИМАНИЕ: отсутствует файл конфигурации для доступа к базе данных.'
-               '\nСгенерируйте конфигурационный файл\033[0m'))
+        print_message('ВНИМАНИЕ: отсутствует файл конфигурации для доступа к базе данных.'
+                      '\nСгенерируйте конфигурационный файл', title='Error', color='lightpink')
         create_config_database()
 
 
@@ -90,3 +83,17 @@ def get_volume(self) -> [bool, str]:
         self.check_exit(user_volume)
         if self.check_entry(user_volume, self.__volume):
             return user_volume
+
+
+def print_message(text, title='Сообщение', color=None):
+    """Метод выводит окно с сообщением"""
+
+    layout = [[sg.Text(text, text_color=color)],
+              [sg.OK()]]
+
+    window = sg.Window(title, layout)
+    while True:
+        event, values = window.read()
+        if event in (sg.WIN_CLOSED, 'OK'):
+            break
+    window.close()

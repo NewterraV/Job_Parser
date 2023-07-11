@@ -6,6 +6,7 @@ from src.classes.employer import Employer
 from src.classes.user_exception import CheckExit
 from src.classes.working_with_files import WorkingWithJSON, WorkingWithExel
 from src.classes.vacancy import Vacancy
+from src.classes.GUI import GUI
 from src.utils import get_user_vacancies
 
 
@@ -81,15 +82,11 @@ class MixinPrint:
 
 class WorkWithUserBase(MixinCheckInput, MixinPrint):
     """Базовый класс для работы с пользователем"""
-    __type_selection = {
-        '1': 'По ключевому слову',
-        '2': 'По работодателю '
-    }
+    __type_selection = [{'title': 'По ключевому слову', 'key': '1'},
+                       {'title': 'По работодателю', 'key': '2'}]
 
-    __main_function = {
-        '1': 'Поиск вакансий',
-        '2': 'Сгенерировать DataBase Config'
-    }
+    __main_function = [{'title': 'Поиск вакансий', 'key': '1'},
+                       {'title': 'Сгенерировать DataBase Config', 'key': '2'}]
 
     __volume = {
         '1': '100 вакансий на одну платформу.',
@@ -105,6 +102,7 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         self.__file_exel = WorkingWithExel()
         self.__db_manager = DBmanager()
         self.__api = HeadHunterAPI()
+        self.__gui = GUI()
 
     @property
     def volume(self):
@@ -118,25 +116,13 @@ class WorkWithUserBase(MixinCheckInput, MixinPrint):
         self.check_exit(name_vacancy)
         return name_vacancy.lower()
 
-    def search_type_selection(self) -> [int, bool]:
+    def search_type_selection(self) -> str:
         """Функция запрашивает у пользователя тип поиска вакансий"""
+        return self.__gui.create_buttons(self.__type_selection)
 
-        while True:
-            self.dict_print(self.__type_selection)
-            user_input = input()
-            self.check_exit(user_input)
-            if self.check_entry(user_input, self.__type_selection):
-                return user_input
-            continue
-
-    def starting_program(self):
-        while True:
-            self.dict_print(self.__main_function)
-            user_input = input()
-            self.check_exit(user_input)
-            if self.check_entry(user_input, self.__main_function):
-                return user_input
-            continue
+    def starting_program(self) -> str:
+        """Метод выводит окно с выбором функции, возвращает текстовое значение выбранное пользователем"""
+        return self.__gui.create_buttons(self.__main_function)
 
     @staticmethod
     def get_repeat():
